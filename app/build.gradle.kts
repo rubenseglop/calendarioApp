@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "es.calendario.personal"
-        minSdk = 26
-        targetSdk = 35
+        minSdk = 29
+        targetSdk = 355
         versionCode = 1
         versionName = "0.1.0"
     }
