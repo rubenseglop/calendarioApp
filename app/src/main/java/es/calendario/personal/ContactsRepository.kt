@@ -21,7 +21,6 @@ class ContactsRepository(private val context: Context) {
     fun birthdays(): List<ContactBirthday> {
         val projection = arrayOf(
             ContactsContract.Data.CONTACT_ID,
-            ContactsContract.Data.DISPLAY_NAME_PRIMARY,
             ContactsContract.CommonDataKinds.Event.START_DATE,
             ContactsContract.CommonDataKinds.Event.TYPE
         )
@@ -39,12 +38,11 @@ class ContactsRepository(private val context: Context) {
             null
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(ContactsContract.Data.CONTACT_ID)
-            val nameColumn = cursor.getColumnIndexOrThrow(ContactsContract.Data.DISPLAY_NAME_PRIMARY)
             val dateColumn = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Event.START_DATE)
             while (cursor.moveToNext()) {
                 val raw = cursor.getString(dateColumn)?.trim().orEmpty()
                 val parsed = parseBirthday(raw) ?: continue
-                val name = cursor.getString(nameColumn)?.takeIf { it.isNotBlank() } ?: "Contacto"
+                val name = contactName(cursor.getLong(idColumn))
                 result += ContactBirthday(
                     contactId = cursor.getLong(idColumn),
                     name = name,
@@ -56,6 +54,22 @@ class ContactsRepository(private val context: Context) {
         }
         return result.distinctBy { "${it.contactId}-${it.month}-${it.day}" }
             .sortedWith(compareBy<ContactBirthday> { it.month }.thenBy { it.day }.thenBy { it.name })
+    }
+
+    private fun contactName(contactId: Long): String {
+        val uri = android.content.ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId)
+        context.contentResolver.query(
+            uri,
+            arrayOf(ContactsContract.Contacts.DISPLAY_NAME),
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0)?.takeIf { it.isNotBlank() } ?: "Contacto"
+            }
+        }
+        return "Contacto"
     }
 
     private fun parseBirthday(value: String): Triple<Int?, Int, Int>? {
