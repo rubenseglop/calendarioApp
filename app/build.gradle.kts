@@ -8,12 +8,24 @@ android {
     namespace = "es.calendario.personal"
     compileSdk = 36
 
+    // Usamos el mismo keystore fijo en todos los builds de GitHub Actions.
+    // Evita que cada runner genere una firma debug distinta e impida actualizar
+    // la app instalada. El keystore se mantiene en app/debug.keystore.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "es.calendario.personal"
         minSdk = 29
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.5.0"
+        versionCode = 6
+        versionName = "0.6.0"
     }
 
     buildFeatures { compose = true }
