@@ -195,15 +195,27 @@ class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
             views.setViewVisibility(R.id.widget_list_empty, android.view.View.VISIBLE)
         } else {
             views.setViewVisibility(R.id.widget_list_empty, android.view.View.GONE)
-            events.forEach { event ->
-                val item = RemoteViews(context.packageName, R.layout.widget_list_item)
-                val date = java.time.Instant.ofEpochMilli(event.begin).atZone(widgetZone)
-                val dateLabel = date.format(DateTimeFormatter.ofPattern("EEE d MMM", widgetLocale))
-                val timeLabel = if (event.allDay) "Todo el día" else date.format(DateTimeFormatter.ofPattern("HH:mm"))
-                item.setTextViewText(R.id.widget_item_title, event.title)
-                item.setTextViewText(R.id.widget_item_detail, "$dateLabel · $timeLabel")
-                views.addView(R.id.widget_list_items, item)
-            }
+            events.groupBy { java.time.Instant.ofEpochMilli(it.begin).atZone(widgetZone).toLocalDate() }
+                .toSortedMap()
+                .forEach { (date, dayEvents) ->
+                    val section = RemoteViews(context.packageName, R.layout.widget_list_section)
+                    val label = when (date) {
+                        today -> "HOY"
+                        today.plusDays(1) -> "MAÑANA"
+                        else -> date.format(DateTimeFormatter.ofPattern("d 'de' MMMM", widgetLocale))
+                            .replaceFirstChar { it.uppercase() }
+                    }
+                    section.setTextViewText(R.id.widget_section_title, label)
+                    views.addView(R.id.widget_list_items, section)
+                    dayEvents.forEach { event ->
+                        val item = RemoteViews(context.packageName, R.layout.widget_list_item)
+                        val eventDate = java.time.Instant.ofEpochMilli(event.begin).atZone(widgetZone)
+                        val timeLabel = if (event.allDay) "Todo el día" else eventDate.format(DateTimeFormatter.ofPattern("HH:mm"))
+                        item.setTextViewText(R.id.widget_item_title, event.title)
+                        item.setTextViewText(R.id.widget_item_detail, timeLabel)
+                        views.addView(R.id.widget_list_items, item)
+                    }
+                }
         }
         return views
     }
