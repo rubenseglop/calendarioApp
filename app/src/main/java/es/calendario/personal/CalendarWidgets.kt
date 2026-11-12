@@ -163,14 +163,61 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
 }
 
 class MonthCalendarWidgetProvider : BaseCalendarWidgetProvider() {
+    companion object {
+        private const val ACTION_PREVIOUS = "es.calendario.personal.MONTH_PREVIOUS"
+        private const val ACTION_NEXT = "es.calendario.personal.MONTH_NEXT"
+        private const val ACTION_TODAY = "es.calendario.personal.MONTH_TODAY"
+        private const val MONTH_PREFS = "month_widget_navigation"
+        private const val MONTH_KEY = "displayed_month"
+    }
+
+    private fun displayedMonth(context: Context): YearMonth {
+        val saved = context.getSharedPreferences(MONTH_PREFS, Context.MODE_PRIVATE)
+            .getString(MONTH_KEY, null)
+        return runCatching { saved?.let { YearMonth.parse(it) } ?: YearMonth.now() }
+            .getOrDefault(YearMonth.now())
+    }
+
+    override fun configureActions(context: Context, views: RemoteViews, appWidgetId: Int) {
+        fun navigationPending(action: String, requestCode: Int): PendingIntent {
+            val intent = Intent(context, MonthCalendarWidgetProvider::class.java).setAction(action)
+            return PendingIntent.getBroadcast(context, appWidgetId * 10 + requestCode, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+        views.setOnClickPendingIntent(R.id.widget_month_previous, navigationPending(ACTION_PREVIOUS, 4))
+        views.setOnClickPendingIntent(R.id.widget_month_next, navigationPending(ACTION_NEXT, 5))
+        views.setOnClickPendingIntent(R.id.widget_month_today, navigationPending(ACTION_TODAY, 6))
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            ACTION_PREVIOUS, ACTION_NEXT, ACTION_TODAY -> {
+                val prefs = context.getSharedPreferences(MONTH_PREFS, Context.MODE_PRIVATE)
+                val month = displayedMonth(context)
+                val target = when (intent.action) {
+                    ACTION_PREVIOUS -> month.minusMonths(1)
+                    ACTION_NEXT -> month.plusMonths(1)
+                    else -> YearMonth.now()
+                }
+                prefs.edit().putString(MONTH_KEY, target.toString()).apply()
+                refresh(context)
+            }
+            else -> super.onReceive(context, intent)
+        }
+    }
+
     override fun createViews(context: Context): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_month)
-        val month = YearMonth.now()
+        val month = displayedMonth(context)
         val settings = AppSettings.load(context)
         val accent = widgetAccent(settings)
         val (_, primaryText, secondaryText) = widgetPalette(context, settings)
         val events = WidgetData.events(context, month.atDay(1), month.plusMonths(1).atDay(1))
         val eventDays = events.map { java.time.Instant.ofEpochMilli(it.begin).atZone(widgetZone).toLocalDate().dayOfMonth }.toSet()
+        views.setTextColor(R.id.widget_month_previous, accent)
+        views.setTextColor(R.id.widget_month_next, accent)
+        views.setTextColor(R.id.widget_month_today, accent)
+        views.setTextViewText(R.id.widget_month_today, "Hoy")
         views.setTextViewText(R.id.widget_month_title,
             month.month.getDisplayName(TextStyle.FULL, widgetLocale).replaceFirstChar { it.uppercase() } + " " + month.year)
         views.setTextColor(R.id.widget_month_title, accent)
