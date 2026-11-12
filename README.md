@@ -24,6 +24,11 @@ La aplicación no envía los eventos a servidores propios.
 - Selección entre calendarios disponibles con permiso de escritura.
 - Eventos de día completo.
 - Campos de fecha, hora y descripción.
+- Lectura opcional de cumpleaños desde los contactos del teléfono.
+- Indicadores especiales de cumpleaños en el calendario mensual.
+- Cumpleaños del día en la vista de agenda y listado de próximos cumpleaños.
+- Cálculo de edad cuando el contacto incluye el año de nacimiento.
+- Compatibilidad con fechas de cumpleaños que no incluyen año (incluidos los 29 de febrero).
 - Interfaz en español y diseño Material 3.
 - Compatible con Android 10 (API 29) y posteriores.
 
@@ -64,6 +69,8 @@ También se puede descargar el APK de cada compilación desde la sección **Acti
 ## Privacidad y permisos
 
 Para mostrar y modificar eventos, Android solicitará los permisos `READ_CALENDAR` y `WRITE_CALENDAR`. Si se deniegan, la aplicación no puede acceder a los calendarios. Los calendarios visibles y editables dependen de las cuentas y permisos configurados en el propio dispositivo.
+
+La lectura de cumpleaños es opcional y solicita por separado el permiso `READ_CONTACTS`. Si no se concede, el calendario y la agenda siguen funcionando normalmente, pero no se muestran cumpleaños de contactos. Los datos de contactos se consultan localmente y no se copian a servidores ni se modifican los contactos. Los cumpleaños se representan dentro de esta aplicación; no se crean automáticamente eventos duplicados en Google Calendar.
 
 ## Licencia
 
