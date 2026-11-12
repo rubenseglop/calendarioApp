@@ -726,7 +726,7 @@ private fun SettingsScreen(
 ) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("CONFIGURACIÓN", color = TimepageCyan, style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold, letterSpacing = androidx.compose.ui.unit.sp(2))
+            fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Spacer(Modifier.height(16.dp))
         Spacer(Modifier.height(16.dp))
         SettingsRow(Icons.Default.Sync, "Google Calendar", "Sincronización mediante las cuentas de Android")
