@@ -299,31 +299,45 @@ private fun MonthScreen(
     val dayEvents = events.filter { repository.toLocalDate(it.begin) == selectedDate }
         .sortedBy { it.begin }
     val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
+
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = onPrevious) { Icon(Icons.Default.ChevronLeft, "Mes anterior") }
             Text(
                 "${month.month.getDisplayName(TextStyle.FULL, Spanish).replaceFirstChar { it.uppercase() }} ${month.year}",
-                style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
             )
             IconButton(onClick = onNext) { Icon(Icons.Default.ChevronRight, "Mes siguiente") }
         }
+
         Row(Modifier.fillMaxWidth()) {
             listOf("L", "M", "X", "J", "V", "S", "D").forEach {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium, modifier = Modifier.padding(vertical = 8.dp))
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
                 }
             }
         }
+
         val offset = month.atDay(1).dayOfWeek.value - 1
         val cells = ((offset + month.lengthOfMonth() + 6) / 7) * 7
         for (week in 0 until cells / 7) {
             Row(Modifier.fillMaxWidth()) {
                 for (column in 0..6) {
                     val day = week * 7 + column - offset + 1
-                    Box(Modifier.weight(1f).aspectRatio(0.86f), contentAlignment = Alignment.Center) {
+                    Box(
+                        Modifier.weight(1f).aspectRatio(0.95f),
+                        contentAlignment = Alignment.Center
+                    ) {
                         if (day in 1..month.lengthOfMonth()) {
                             val date = month.atDay(day)
                             val selected = date == selectedDate
@@ -337,12 +351,24 @@ private fun MonthScreen(
                                         .clickable { onSelect(date) },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("$day", color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = if (today || selected) FontWeight.Bold else FontWeight.Normal)
+                                    Text(
+                                        "$day",
+                                        color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = if (today || selected) FontWeight.Bold else FontWeight.Normal
+                                    )
                                 }
-                                Row(horizontalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.padding(top = 3.dp)) {
-                                    if (hasEvents) Box(Modifier.size(5.dp).clip(CircleShape).background(MaterialTheme.colorScheme.tertiary))
-                                    if (hasBirthday) Box(Modifier.size(5.dp).clip(CircleShape).background(Color(0xFFE56B8A)))
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                    modifier = Modifier.padding(top = 3.dp)
+                                ) {
+                                    if (hasEvents) {
+                                        Box(Modifier.size(5.dp).clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.tertiary))
+                                    }
+                                    if (hasBirthday) {
+                                        Box(Modifier.size(5.dp).clip(CircleShape)
+                                            .background(Color(0xFFE56B8A)))
+                                    }
                                 }
                             }
                         }
@@ -350,24 +376,40 @@ private fun MonthScreen(
                 }
             }
         }
-        HorizontalDivider(Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+        HorizontalDivider(
+            Modifier.padding(top = 4.dp),
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
         Text(
             selectedDate.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Spanish))
                 .replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 14.dp, bottom = 8.dp)
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
         )
-        dayBirthdays.forEach { birthday ->
-            BirthdayRow(birthday, selectedDate)
-        }
-        if (dayEvents.isEmpty() && dayBirthdays.isEmpty()) {
-            Text("No hay eventos ni cumpleaños para este día", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 8.dp))
-        }
-        if (dayEvents.isNotEmpty()) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(dayEvents, key = { it.id }) { event -> EventRow(event, repository) { onEventClick(event) } }
+
+        // Una única lista ocupa todo el espacio restante y permite desplazarse
+        // por todos los eventos y cumpleaños del día, no solo por el primero.
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 12.dp)
+        ) {
+            items(dayBirthdays, key = { "birthday-${it.contactId}" }) { birthday ->
+                BirthdayRow(birthday, selectedDate)
+            }
+            items(dayEvents, key = { "event-${it.id}" }) { event ->
+                EventRow(event, repository) { onEventClick(event) }
+            }
+            if (dayEvents.isEmpty() && dayBirthdays.isEmpty()) {
+                item {
+                    Text(
+                        "No hay eventos ni cumpleaños para este día",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
         }
     }
