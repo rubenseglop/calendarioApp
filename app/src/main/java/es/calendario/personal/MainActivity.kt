@@ -66,6 +66,9 @@ private fun CalendarioTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = scheme, content = content)
 }
 
+private fun hasContactsPermission(context: android.content.Context): Boolean =
+    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+
 private fun hasCalendarPermissions(context: android.content.Context): Boolean =
     ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED &&
         ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED
@@ -75,21 +78,35 @@ private fun hasCalendarPermissions(context: android.content.Context): Boolean =
 private fun CalendarApp() {
     val context = LocalContext.current
     val repository = remember { CalendarRepository(context) }
+    val contactsRepository = remember { ContactsRepository(context) }
     var selected by remember { mutableStateOf(Destination.CALENDAR) }
     var month by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var permissionGranted by remember { mutableStateOf(hasCalendarPermissions(context)) }
     var events by remember { mutableStateOf(emptyList<CalendarEvent>()) }
     var calendars by remember { mutableStateOf(emptyList<WritableCalendar>()) }
+    var contactsPermission by remember { mutableStateOf(hasContactsPermission(context)) }
+    var birthdays by remember { mutableStateOf(emptyList<ContactBirthday>()) }
     var editingEvent by remember { mutableStateOf<CalendarEvent?>(null) }
     var showEditor by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
+
+    val contactsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> contactsPermission = granted }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         permissionGranted = result[Manifest.permission.READ_CALENDAR] == true &&
             result[Manifest.permission.WRITE_CALENDAR] == true
+    }
+
+    LaunchedEffect(contactsPermission, month) {
+        birthdays = if (contactsPermission) {
+            try { withContext(Dispatchers.IO) { contactsRepository.birthdays() } }
+            catch (_: SecurityException) { contactsPermission = false; emptyList() }
+        } else emptyList()
     }
 
     LaunchedEffect(permissionGranted, month) {
@@ -168,18 +185,23 @@ private fun CalendarApp() {
                     ))
                 }
                 selected == Destination.CALENDAR -> MonthScreen(
-                    month, selectedDate, events, repository,
+                    month, selectedDate, events, repository, birthdays,
                     onPrevious = { month = month.minusMonths(1) },
                     onNext = { month = month.plusMonths(1) },
                     onSelect = { selectedDate = it },
                     onEventClick = { editingEvent = it; showEditor = true }
                 )
                 selected == Destination.AGENDA -> AgendaScreen(
-                    selectedDate, events, repository,
+                    selectedDate, events, repository, birthdays,
                     onDateChange = { selectedDate = it; month = YearMonth.from(it) },
                     onEventClick = { editingEvent = it; showEditor = true }
                 )
-                else -> SettingsScreen(calendars.size)
+                else -> SettingsScreen(
+                    calendarCount = calendars.size,
+                    contactsEnabled = contactsPermission,
+                    birthdayCount = birthdays.size,
+                    onEnableContacts = { contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS) }
+                )
             }
         }
     }
@@ -268,6 +290,7 @@ private fun MonthScreen(
     selectedDate: LocalDate,
     events: List<CalendarEvent>,
     repository: CalendarRepository,
+    birthdays: List<ContactBirthday>,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onSelect: (LocalDate) -> Unit,
@@ -275,6 +298,7 @@ private fun MonthScreen(
 ) {
     val dayEvents = events.filter { repository.toLocalDate(it.begin) == selectedDate }
         .sortedBy { it.begin }
+    val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -305,6 +329,7 @@ private fun MonthScreen(
                             val selected = date == selectedDate
                             val today = date == LocalDate.now()
                             val hasEvents = events.any { repository.toLocalDate(it.begin) == date }
+                            val hasBirthday = birthdays.any { it.occursOn(date) }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(
                                     Modifier.size(38.dp).clip(CircleShape)
@@ -315,9 +340,9 @@ private fun MonthScreen(
                                     Text("$day", color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                                         fontWeight = if (today || selected) FontWeight.Bold else FontWeight.Normal)
                                 }
-                                if (hasEvents) {
-                                    Box(Modifier.padding(top = 3.dp).size(5.dp).clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.tertiary))
+                                Row(horizontalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.padding(top = 3.dp)) {
+                                    if (hasEvents) Box(Modifier.size(5.dp).clip(CircleShape).background(MaterialTheme.colorScheme.tertiary))
+                                    if (hasBirthday) Box(Modifier.size(5.dp).clip(CircleShape).background(Color(0xFFE56B8A)))
                                 }
                             }
                         }
@@ -333,6 +358,9 @@ private fun MonthScreen(
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(top = 14.dp, bottom = 8.dp)
         )
+        dayBirthdays.forEach { birthday ->
+            BirthdayRow(birthday, selectedDate)
+        }
         if (dayEvents.isEmpty()) {
             Text("No hay eventos para este día", color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp))
@@ -349,10 +377,12 @@ private fun AgendaScreen(
     selectedDate: LocalDate,
     events: List<CalendarEvent>,
     repository: CalendarRepository,
+    birthdays: List<ContactBirthday>,
     onDateChange: (LocalDate) -> Unit,
     onEventClick: (CalendarEvent) -> Unit
 ) {
     val days = events.groupBy { repository.toLocalDate(it.begin) }
+    val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -371,10 +401,29 @@ private fun AgendaScreen(
             Spacer(Modifier.height(12.dp))
         }
         val selectedEvents = days[selectedDate].orEmpty().sortedBy { it.begin }
-        if (selectedEvents.isEmpty()) {
-            item { Text("No hay eventos para este día.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        } else {
-            items(selectedEvents, key = { it.id }) { event -> EventRow(event, repository) { onEventClick(event) } }
+        items(dayBirthdays, key = { "birthday-${it.contactId}" }) { birthday -> BirthdayRow(birthday, selectedDate) }
+        if (selectedEvents.isEmpty() && dayBirthdays.isEmpty()) {
+            item { Text("No hay eventos ni cumpleaños para este día.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        items(selectedEvents, key = { it.id }) { event -> EventRow(event, repository) { onEventClick(event) } }
+    }
+}
+
+@Composable
+private fun BirthdayRow(birthday: ContactBirthday, date: LocalDate) {
+    val age = birthday.ageOn(date)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F3))
+    ) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Cake, contentDescription = "Cumpleaños", tint = Color(0xFFC44568))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(birthday.name, fontWeight = FontWeight.SemiBold)
+                Text(if (age != null) "Cumple $age años" else "Cumpleaños",
+                    color = Color(0xFF9B3D58), style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
@@ -513,12 +562,21 @@ private fun InstantTime(millis: Long, zone: ZoneId): LocalTime =
     java.time.Instant.ofEpochMilli(millis).atZone(zone).toLocalTime()
 
 @Composable
-private fun SettingsScreen(calendarCount: Int) {
+private fun SettingsScreen(
+    calendarCount: Int,
+    contactsEnabled: Boolean,
+    birthdayCount: Int,
+    onEnableContacts: () -> Unit
+) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("Configuración", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         SettingsRow(Icons.Default.Sync, "Google Calendar", "Sincronización mediante las cuentas de Android")
         SettingsRow(Icons.Default.CalendarMonth, "Calendarios disponibles", "$calendarCount calendarios con escritura")
+        SettingsRow(Icons.Default.Cake, "Cumpleaños de contactos", if (contactsEnabled) "$birthdayCount cumpleaños detectados" else "Permite leer las fechas de cumpleaños de tu agenda")
+        if (!contactsEnabled) {
+            Button(onClick = onEnableContacts) { Text("Activar cumpleaños de contactos") }
+        }
         SettingsRow(Icons.Default.Notifications, "Notificaciones", "En una próxima versión")
         SettingsRow(Icons.Default.Widgets, "Widgets", "En una próxima versión")
         SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.2.0")
