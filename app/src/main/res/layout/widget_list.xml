@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Próximos eventos"
-            android:textColor="#FFFFFF"
+            android:textColor="#29304A"
             android:textSize="16sp"
             android:textStyle="bold" />
         <TextView
@@ -26,7 +26,7 @@
             android:layout_height="32dp"
             android:gravity="center"
             android:text="⚙"
-            android:textColor="#FFFFFF"
+            android:textColor="#29304A"
             android:contentDescription="Configurar transparencia" />
     </LinearLayout>
     <TextView
@@ -50,9 +50,9 @@
         android:orientation="horizontal"
         android:gravity="end"
         android:paddingTop="6dp">
-        <TextView android:id="@+id/widget_add_event" android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="8dp" android:text="+ Evento" android:textColor="#FFFFFF" android:textStyle="bold" android:background="#5263A8" />
-        <TextView android:id="@+id/widget_add_day" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:padding="8dp" android:text="+ Día" android:textColor="#FFFFFF" android:textStyle="bold" android:background="#665A8E" />
-        <TextView android:id="@+id/widget_add_reminder" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:padding="8dp" android:text="⏰" android:contentDescription="Añadir recordatorio" android:textColor="#FFFFFF" android:background="#9B5474" />
+        <TextView android:id="@+id/widget_add_event" android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="8dp" android:text="+ Evento" android:textColor="#29304A" android:textStyle="bold" android:background="#5263A8" />
+        <TextView android:id="@+id/widget_add_day" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:padding="8dp" android:text="+ Día" android:textColor="#29304A" android:textStyle="bold" android:background="#665A8E" />
+        <TextView android:id="@+id/widget_add_reminder" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:padding="8dp" android:text="⏰" android:contentDescription="Añadir recordatorio" android:textColor="#29304A" android:background="#9B5474" />
     </LinearLayout>
     <TextView
         android:id="@+id/widget_list_empty"
