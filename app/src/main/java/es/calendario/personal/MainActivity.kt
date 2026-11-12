@@ -361,10 +361,11 @@ private fun MonthScreen(
         dayBirthdays.forEach { birthday ->
             BirthdayRow(birthday, selectedDate)
         }
-        if (dayEvents.isEmpty()) {
-            Text("No hay eventos para este día", color = MaterialTheme.colorScheme.onSurfaceVariant,
+        if (dayEvents.isEmpty() && dayBirthdays.isEmpty()) {
+            Text("No hay eventos ni cumpleaños para este día", color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp))
-        } else {
+        }
+        if (dayEvents.isNotEmpty()) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(dayEvents, key = { it.id }) { event -> EventRow(event, repository) { onEventClick(event) } }
             }
