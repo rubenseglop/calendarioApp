@@ -254,6 +254,9 @@ class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
         views.setTextColor(R.id.widget_list_title, primaryText)
         views.setTextColor(R.id.widget_list_subtitle, secondaryText)
         views.setTextColor(R.id.widget_list_empty, secondaryText)
+        listOf(R.id.widget_add_event, R.id.widget_add_day, R.id.widget_add_reminder).forEach {
+            views.setInt(it, "setBackgroundColor", accent)
+        }
         val events = WidgetData.events(context, today, today.plusDays(widgetSettings.widgetDays.toLong()))
             .take(widgetSettings.widgetEventCount)
         if (events.isEmpty()) {
