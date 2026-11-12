@@ -23,7 +23,7 @@ data class AppSettings(
             .putString("accent_color", accentColor)
             .putInt("first_day_of_week", firstDayOfWeek)
             .putBoolean("visible_calendars_configured", visibleCalendarIds != null)
-            .putStringSet("visible_calendar_ids", visibleCalendarIds?.map { it.toString() }?.toSet() ?: emptySet())
+            .putStringSet("visible_calendar_ids", visibleCalendarIds?.map { it.toString() }?.toMutableSet() ?: mutableSetOf())
             .putInt("default_duration", defaultDurationMinutes)
             .putInt("default_reminder", defaultReminderMinutes)
             .putBoolean("show_birthdays", showBirthdays)
@@ -38,7 +38,7 @@ data class AppSettings(
         fun load(context: Context): AppSettings {
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             val configured = prefs.getBoolean("visible_calendars_configured", false)
-            val ids = if (configured) prefs.getStringSet("visible_calendar_ids", emptySet())
+            val ids = if (configured) prefs.getStringSet("visible_calendar_ids", mutableSetOf())
                 .orEmpty().mapNotNull { it.toLongOrNull() }.toSet() else null
             return AppSettings(
                 theme = prefs.getString("theme", "auto") ?: "auto",
