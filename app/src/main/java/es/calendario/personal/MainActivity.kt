@@ -69,6 +69,7 @@ private fun hasCalendarPermissions(context: android.content.Context): Boolean =
     ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED &&
         ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalendarApp() {
     val context = LocalContext.current
@@ -108,12 +109,6 @@ private fun CalendarApp() {
             events = emptyList()
             calendars = emptyList()
         }
-    }
-
-    fun refresh() {
-        // Changing the selected month triggers the normal provider refresh.
-        month = month
-        permissionGranted = hasCalendarPermissions(context)
     }
 
     Scaffold(
