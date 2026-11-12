@@ -35,7 +35,9 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           # Instala la plataforma necesaria para compileSdk 36.
-          packages: 'platform-tools, platforms;android-36'
+          packages: |
+            platform-tools
+            platforms;android-36
 
       - name: Configurar Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
