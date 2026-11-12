@@ -59,7 +59,6 @@ private enum class Destination(val label: String) {
     CALENDAR("Calendario"), AGENDA("Agenda"), SETTINGS("Ajustes")
 }
 
-@Composable
 private val NightBackground = Color(0xFF101216)
 private val NightSurface = Color(0xFF191D23)
 private val NightMuted = Color(0xFF858D98)
@@ -523,7 +522,7 @@ private fun AgendaScreen(
                 }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("AGENDA", style = MaterialTheme.typography.titleLarge, color = TimepageCyan,
-                        fontWeight = FontWeight.Bold, letterSpacing = androidx.compose.ui.unit.sp(2))
+                        fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Text(selectedDate.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Spanish))
                         .replaceFirstChar { it.uppercase() }, color = NightMuted)
                 }
