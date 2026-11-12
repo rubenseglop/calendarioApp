@@ -34,7 +34,7 @@ La aplicación no envía los eventos a servidores propios.
 
 ## Próximas funcionalidades
 
-- Widgets de pantalla de inicio (mes, agenda y próximos eventos).
+- Recordatorios y notificaciones.
 - Recordatorios y notificaciones.
 - Búsqueda de eventos.
 - Vistas semanal y diaria más completas.
