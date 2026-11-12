@@ -35,13 +35,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="L" android:textColor="#777B8B" android:textSize="10sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="M" android:textColor="#777B8B" android:textSize="10sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="X" android:textColor="#777B8B" android:textSize="10sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="J" android:textColor="#777B8B" android:textSize="10sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="V" android:textColor="#777B8B" android:textSize="10sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="S" android:textColor="#777B8B" android:textSize="10sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="D" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_0" android:text="L" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_1" android:text="M" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_2" android:text="X" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_3" android:text="J" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_4" android:text="V" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_5" android:text="S" android:textColor="#777B8B" android:textSize="10sp" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:id="@+id/widget_weekday_6" android:text="D" android:textColor="#777B8B" android:textSize="10sp" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/widget_month_days"

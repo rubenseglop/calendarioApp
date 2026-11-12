@@ -60,6 +60,27 @@ class CalendarRepository(private val context: Context) {
         return result
     }
 
+    fun visibleCalendars(): List<WritableCalendar> {
+        val projection = arrayOf(Calendars._ID, Calendars.CALENDAR_DISPLAY_NAME, Calendars.ACCOUNT_NAME)
+        val result = mutableListOf<WritableCalendar>()
+        context.contentResolver.query(
+            Calendars.CONTENT_URI, projection, "${Calendars.VISIBLE}=1", null,
+            "${Calendars.CALENDAR_DISPLAY_NAME} ASC"
+        )?.use { cursor ->
+            val id = cursor.getColumnIndexOrThrow(Calendars._ID)
+            val name = cursor.getColumnIndexOrThrow(Calendars.CALENDAR_DISPLAY_NAME)
+            val account = cursor.getColumnIndexOrThrow(Calendars.ACCOUNT_NAME)
+            while (cursor.moveToNext()) {
+                result += WritableCalendar(
+                    cursor.getLong(id),
+                    cursor.getString(name) ?: "Calendario",
+                    cursor.getString(account) ?: ""
+                )
+            }
+        }
+        return result
+    }
+
     fun writableCalendars(): List<WritableCalendar> {
         val projection = arrayOf(Calendars._ID, Calendars.CALENDAR_DISPLAY_NAME, Calendars.ACCOUNT_NAME)
         val selection = "${Calendars.VISIBLE}=1 AND ${Calendars.CALENDAR_ACCESS_LEVEL}>=?"
@@ -90,7 +111,8 @@ class CalendarRepository(private val context: Context) {
         description: String,
         begin: Long,
         end: Long,
-        allDay: Boolean
+        allDay: Boolean,
+        reminderMinutes: Int = 0
     ): Long {
         val values = ContentValues().apply {
             put(CalendarContract.Events.CALENDAR_ID, calendarId)
@@ -104,7 +126,18 @@ class CalendarRepository(private val context: Context) {
         return if (eventId == null) {
             val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
                 ?: error("Android no ha permitido crear el evento")
-            android.content.ContentUris.parseId(uri)
+            val newId = android.content.ContentUris.parseId(uri)
+            if (reminderMinutes > 0) {
+                val reminder = ContentValues().apply {
+                    put(CalendarContract.Reminders.EVENT_ID, newId)
+                    put(CalendarContract.Reminders.MINUTES, reminderMinutes)
+                    put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT)
+                }
+                // Some calendar providers/accounts do not support reminders; keep the event either way.
+                try { context.contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, reminder) }
+                catch (_: Exception) { }
+            }
+            newId
         } else {
             val uri = android.content.ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
             val updated = context.contentResolver.update(uri, values, null, null)

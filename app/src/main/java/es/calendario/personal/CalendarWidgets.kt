@@ -18,7 +18,7 @@ import java.util.Locale
 private val widgetLocale = Locale("es", "ES")
 private val widgetZone: ZoneId get() = ZoneId.systemDefault()
 
-private data class WidgetEvent(val title: String, val begin: Long, val end: Long, val allDay: Boolean)
+private data class WidgetEvent(val title: String, val begin: Long, val end: Long, val allDay: Boolean, val calendarId: Long)
 
 private object WidgetData {
     fun events(context: Context, from: LocalDate, until: LocalDate): List<WidgetEvent> {
@@ -31,18 +31,24 @@ private object WidgetData {
             context.contentResolver.query(
                 uri,
                 arrayOf(CalendarContract.Instances.TITLE, CalendarContract.Instances.BEGIN,
-                    CalendarContract.Instances.END, CalendarContract.Instances.ALL_DAY),
+                    CalendarContract.Instances.END, CalendarContract.Instances.ALL_DAY, CalendarContract.Instances.CALENDAR_ID),
                 null, null, CalendarContract.Instances.BEGIN + " ASC"
             )?.use { cursor ->
                 val title = cursor.getColumnIndexOrThrow(CalendarContract.Instances.TITLE)
                 val begin = cursor.getColumnIndexOrThrow(CalendarContract.Instances.BEGIN)
                 val finish = cursor.getColumnIndexOrThrow(CalendarContract.Instances.END)
                 val allDay = cursor.getColumnIndexOrThrow(CalendarContract.Instances.ALL_DAY)
+                val calendarId = cursor.getColumnIndexOrThrow(CalendarContract.Instances.CALENDAR_ID)
+                val settings = AppSettings.load(context)
                 while (cursor.moveToNext()) {
-                    result += WidgetEvent(
+                    val item = WidgetEvent(
                         cursor.getString(title)?.takeIf { it.isNotBlank() } ?: "Sin título",
-                        cursor.getLong(begin), cursor.getLong(finish), cursor.getInt(allDay) != 0
+                        cursor.getLong(begin), cursor.getLong(finish), cursor.getInt(allDay) != 0,
+                        cursor.getLong(calendarId)
                     )
+                    if (settings.visibleCalendarIds == null || item.calendarId in settings.visibleCalendarIds) {
+                        result += item
+                    }
                 }
             }
         } catch (_: SecurityException) {
@@ -53,15 +59,18 @@ private object WidgetData {
         return result
     }
 
-    fun birthdays(context: Context, from: LocalDate): List<Pair<ContactBirthday, LocalDate>> {
+    fun birthdays(context: Context, from: LocalDate, days: Int, count: Int): List<Pair<ContactBirthday, LocalDate>> {
+        if (!AppSettings.load(context).showBirthdays) return emptyList()
         return try {
             ContactsRepository(context).birthdays().mapNotNull { birthday ->
                 (from.year..(from.year + 8)).firstNotNullOfOrNull { year ->
                     try {
-                        LocalDate.of(year, birthday.month, birthday.day).takeIf { !it.isBefore(from) }
+                        LocalDate.of(year, birthday.month, birthday.day).takeIf {
+                            !it.isBefore(from) && !it.isAfter(from.plusDays(days.toLong()))
+                        }
                     } catch (_: java.time.DateTimeException) { null }
                 }?.let { birthday to it }
-            }.sortedBy { it.second }.take(5)
+            }.sortedBy { it.second }.take(count)
         } catch (_: SecurityException) {
             emptyList()
         } catch (_: Exception) {
@@ -126,8 +135,14 @@ class MonthCalendarWidgetProvider : BaseCalendarWidgetProvider() {
             month.month.getDisplayName(TextStyle.FULL, widgetLocale).replaceFirstChar { it.uppercase() } + " " + month.year)
         views.removeAllViews(R.id.widget_month_days)
 
-        val offset = month.atDay(1).dayOfWeek.value - 1
-        val totalCells = 42
+        val firstDay = AppSettings.load(context).firstDayOfWeek
+        val weekdayIds = intArrayOf(R.id.widget_weekday_0, R.id.widget_weekday_1, R.id.widget_weekday_2,
+            R.id.widget_weekday_3, R.id.widget_weekday_4, R.id.widget_weekday_5, R.id.widget_weekday_6)
+        val weekdayLabels = listOf("L", "M", "X", "J", "V", "S", "D")
+        weekdayIds.forEachIndexed { index, id ->
+            views.setTextViewText(id, weekdayLabels[(firstDay - 1 + index) % 7])
+        }
+        val offset = (month.atDay(1).dayOfWeek.value - firstDay + 7) % 7
         repeat(6) { week ->
             val row = RemoteViews(context.packageName, R.layout.widget_month_week)
             repeat(7) { dayOfWeek ->
@@ -189,7 +204,9 @@ class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
         views.setTextViewText(R.id.widget_list_subtitle, "Tu agenda")
         views.removeAllViews(R.id.widget_list_items)
         val today = LocalDate.now()
-        val events = WidgetData.events(context, today, today.plusDays(31)).take(5)
+        val widgetSettings = AppSettings.load(context)
+        val events = WidgetData.events(context, today, today.plusDays(widgetSettings.widgetDays.toLong()))
+            .take(widgetSettings.widgetEventCount)
         if (events.isEmpty()) {
             views.setTextViewText(R.id.widget_list_empty, "No hay próximos eventos")
             views.setViewVisibility(R.id.widget_list_empty, android.view.View.VISIBLE)
@@ -228,9 +245,12 @@ class BirthdayWidgetProvider : BaseCalendarWidgetProvider() {
         views.setTextViewText(R.id.widget_list_title, "Cumpleaños")
         views.setTextViewText(R.id.widget_list_subtitle, "De tus contactos")
         views.removeAllViews(R.id.widget_list_items)
-        val birthdays = WidgetData.birthdays(context, LocalDate.now())
+        val widgetSettings = AppSettings.load(context)
+        val birthdays = WidgetData.birthdays(context, LocalDate.now(), widgetSettings.widgetDays, widgetSettings.widgetEventCount)
         if (birthdays.isEmpty()) {
-            views.setTextViewText(R.id.widget_list_empty, "Activa el permiso de Contactos en la app")
+            views.setTextViewText(R.id.widget_list_empty,
+                if (!widgetSettings.showBirthdays) "Cumpleaños desactivados en Ajustes"
+                else "Activa el permiso de Contactos en la app")
             views.setViewVisibility(R.id.widget_list_empty, android.view.View.VISIBLE)
         } else {
             views.setViewVisibility(R.id.widget_list_empty, android.view.View.GONE)

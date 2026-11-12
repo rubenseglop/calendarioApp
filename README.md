@@ -21,27 +21,30 @@ La aplicación no envía los eventos a servidores propios.
 - Consulta de eventos reales del dispositivo.
 - Vista de agenda para el día seleccionado.
 - Creación, edición y eliminación de eventos.
-- Selección entre calendarios disponibles con permiso de escritura.
+- Selección entre calendarios visibles para filtrar lo que aparece en la app y en los widgets.
 - Eventos de día completo.
 - Campos de fecha, hora y descripción.
-- Lectura opcional de cumpleaños desde los contactos del teléfono.
+- Lectura opcional de cumpleaños desde los contactos del teléfono, con control para mostrarlos u ocultarlos.
 - Indicadores especiales de cumpleaños en el calendario mensual.
 - Cumpleaños del día en la vista de agenda y listado de próximos cumpleaños.
 - Cálculo de edad cuando el contacto incluye el año de nacimiento.
 - Compatibilidad con fechas de cumpleaños que no incluyen año (incluidos los 29 de febrero).
-- Interfaz en español con estética oscura inspirada en Moleskine Timepage.
+- Tema automático, claro u oscuro y cinco colores de acento configurables.
 - Calendario mensual con mes en turquesa, selección circular, días adyacentes atenuados e indicadores de eventos y cumpleaños.
+- Primer día de la semana configurable (lunes o domingo).
+- Duración y recordatorio predeterminados para los eventos nuevos.
+- Widgets de agenda configurables: horizonte de 7, 14, 30 o 60 días y cantidad máxima de eventos.
+- Restablecimiento de preferencias sin borrar eventos ni contactos.
 - Vista vertical con calendario y agenda, y vista horizontal dividida en dos paneles.
+- Interfaz en español con estética oscura inspirada en Moleskine Timepage.
 - Compatible con Android 10 (API 29) y posteriores.
 
 ## Próximas funcionalidades
 
-- Recordatorios y notificaciones.
-- Búsqueda de eventos.
+- Notificaciones propias y búsqueda de eventos.
 - Vistas semanal y diaria más completas.
 - Reglas de recurrencia y mejoras de edición.
 - Tareas y listas persistentes.
-- Temas y personalización.
 
 ## Requisitos de desarrollo
 
