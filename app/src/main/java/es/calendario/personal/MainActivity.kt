@@ -59,14 +59,28 @@ private enum class Destination(val label: String) {
 }
 
 @Composable
+private val NightBackground = Color(0xFF101216)
+private val NightSurface = Color(0xFF191D23)
+private val NightMuted = Color(0xFF858D98)
+private val TimepageCyan = Color(0xFF62D6D0)
+private val BirthdayPink = Color(0xFFFF829D)
+
+@Composable
 private fun CalendarioTheme(content: @Composable () -> Unit) {
-    val scheme = lightColorScheme(
-        primary = Color(0xFF5263A8),
-        onPrimary = Color.White,
-        secondary = Color(0xFF665A8E),
-        background = Color(0xFFF7F7FC),
-        surface = Color.White,
-        surfaceVariant = Color(0xFFE9EAF5)
+    val scheme = darkColorScheme(
+        primary = TimepageCyan,
+        onPrimary = Color(0xFF101216),
+        secondary = Color(0xFF91A9FF),
+        onSecondary = Color(0xFF101216),
+        tertiary = BirthdayPink,
+        background = NightBackground,
+        onBackground = Color(0xFFF3F5F7),
+        surface = NightSurface,
+        onSurface = Color(0xFFF3F5F7),
+        surfaceVariant = Color(0xFF252B33),
+        onSurfaceVariant = NightMuted,
+        outline = Color(0xFF3B444F),
+        outlineVariant = Color(0xFF303740)
     )
     MaterialTheme(colorScheme = scheme, content = content)
 }
@@ -193,7 +207,7 @@ private fun CalendarApp() {
                     month, selectedDate, events, repository, birthdays,
                     onPrevious = { month = month.minusMonths(1) },
                     onNext = { month = month.plusMonths(1) },
-                    onSelect = { selectedDate = it },
+                    onSelect = { selectedDate = it; month = YearMonth.from(it) },
                     onEventClick = { editingEvent = it; showEditor = true }
                 )
                 selected == Destination.AGENDA -> AgendaScreen(
@@ -350,71 +364,85 @@ private fun MonthCalendarPanel(
     onNext: () -> Unit,
     onSelect: (LocalDate) -> Unit
 ) {
-    Column(Modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
         Row(
-            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            Modifier.fillMaxWidth().padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onPrevious) { Icon(Icons.Default.ChevronLeft, "Mes anterior") }
-            Text(
-                "${month.month.getDisplayName(TextStyle.FULL, Spanish).replaceFirstChar { it.uppercase() }} ${month.year}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            IconButton(onClick = onNext) { Icon(Icons.Default.ChevronRight, "Mes siguiente") }
+            IconButton(onClick = onPrevious) {
+                Icon(Icons.Default.ChevronLeft, "Mes anterior", tint = NightMuted)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    month.month.getDisplayName(TextStyle.FULL, Spanish).uppercase(Spanish),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = TimepageCyan,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = androidx.compose.ui.unit.sp(2)
+                )
+                Text(month.year.toString(), style = MaterialTheme.typography.labelMedium, color = NightMuted)
+            }
+            IconButton(onClick = onNext) {
+                Icon(Icons.Default.ChevronRight, "Mes siguiente", tint = NightMuted)
+            }
         }
-        Row(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
             listOf("L", "M", "X", "J", "V", "S", "D").forEach {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text(
-                        it,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
+                    Text(it, color = NightMuted, style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold)
                 }
             }
         }
-        val offset = month.atDay(1).dayOfWeek.value - 1
-        val cells = ((offset + month.lengthOfMonth() + 6) / 7) * 7
-        for (week in 0 until cells / 7) {
+        val firstVisibleDate = month.atDay(1).minusDays((month.atDay(1).dayOfWeek.value - 1).toLong())
+        repeat(6) { week ->
             Row(Modifier.fillMaxWidth()) {
-                for (column in 0..6) {
-                    val day = week * 7 + column - offset + 1
-                    Box(Modifier.weight(1f).aspectRatio(0.95f), contentAlignment = Alignment.Center) {
-                        if (day in 1..month.lengthOfMonth()) {
-                            val date = month.atDay(day)
-                            val selected = date == selectedDate
-                            val today = date == LocalDate.now()
-                            val hasEvents = events.any { repository.toLocalDate(it.begin) == date }
-                            val hasBirthday = birthdays.any { it.occursOn(date) }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    Modifier.size(38.dp).clip(CircleShape)
-                                        .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                        .clickable { onSelect(date) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "$day",
-                                        color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = if (today || selected) FontWeight.Bold else FontWeight.Normal
+                repeat(7) { column ->
+                    val date = firstVisibleDate.plusDays((week * 7 + column).toLong())
+                    val inMonth = YearMonth.from(date) == month
+                    val selected = date == selectedDate
+                    val today = date == LocalDate.now()
+                    val hasEvents = events.any { repository.toLocalDate(it.begin) == date }
+                    val hasBirthday = birthdays.any { it.occursOn(date) }
+                    Box(
+                        Modifier.weight(1f).aspectRatio(0.95f).clickable { onSelect(date) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                Modifier.size(38.dp)
+                                    .then(
+                                        if (selected) Modifier.background(Color.White, CircleShape)
+                                        else if (today) Modifier.clip(CircleShape)
+                                            .background(Color.Transparent)
+                                            .then(Modifier)
+                                        else Modifier
                                     )
+                                    .then(if (today && !selected) Modifier.padding(1.dp) else Modifier),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (today && !selected) {
+                                    Box(Modifier.size(36.dp).clip(CircleShape)
+                                        .background(TimepageCyan.copy(alpha = 0.13f)))
                                 }
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(3.dp),
-                                    modifier = Modifier.padding(top = 3.dp)
-                                ) {
-                                    if (hasEvents) {
-                                        Box(Modifier.size(5.dp).clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.tertiary))
-                                    }
-                                    if (hasBirthday) {
-                                        Box(Modifier.size(5.dp).clip(CircleShape)
-                                            .background(Color(0xFFE56B8A)))
-                                    }
-                                }
+                                Text(
+                                    date.dayOfMonth.toString(),
+                                    color = when {
+                                        selected -> NightBackground
+                                        !inMonth -> Color(0xFF4C535D)
+                                        today -> TimepageCyan
+                                        else -> Color(0xFFE7EAEE)
+                                    },
+                                    fontWeight = if (selected || today) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                modifier = Modifier.padding(top = 2.dp).height(5.dp)
+                            ) {
+                                if (hasEvents && inMonth) Box(Modifier.size(4.dp).clip(CircleShape).background(TimepageCyan))
+                                if (hasBirthday && inMonth) Box(Modifier.size(4.dp).clip(CircleShape).background(BirthdayPink))
                             }
                         }
                     }
@@ -438,21 +466,19 @@ private fun DayEventsPanel(
     val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
 
     Column(modifier.fillMaxWidth()) {
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+        HorizontalDivider(color = Color(0xFF303740), modifier = Modifier.padding(top = 8.dp))
         Text(
             selectedDate.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Spanish))
                 .replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+            color = TimepageCyan,
+            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
         )
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(bottom = 12.dp)
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             items(dayBirthdays, key = { "birthday-${it.contactId}" }) { birthday ->
                 BirthdayRow(birthday, selectedDate)
@@ -463,9 +489,10 @@ private fun DayEventsPanel(
             if (dayEvents.isEmpty() && dayBirthdays.isEmpty()) {
                 item {
                     Text(
-                        "No hay eventos ni cumpleaños para este día",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        "Un día despejado. No hay nada en la agenda.",
+                        color = NightMuted,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 18.dp)
                     )
                 }
             }
@@ -487,33 +514,36 @@ private fun AgendaScreen(
     val upcomingBirthdays = birthdays.mapNotNull { birthday ->
         nextBirthdayDate(birthday, selectedDate)?.let { birthday to it }
     }.sortedBy { it.second }.take(20)
-    LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
+    LazyColumn(Modifier.fillMaxSize().padding(horizontal = 18.dp)) {
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp, bottom = 14.dp)) {
                 IconButton(onClick = { onDateChange(selectedDate.minusDays(1)) }) {
-                    Icon(Icons.Default.ChevronLeft, "Día anterior")
+                    Icon(Icons.Default.ChevronLeft, "Día anterior", tint = NightMuted)
                 }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Agenda", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("AGENDA", style = MaterialTheme.typography.titleLarge, color = TimepageCyan,
+                        fontWeight = FontWeight.Bold, letterSpacing = androidx.compose.ui.unit.sp(2))
                     Text(selectedDate.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Spanish))
-                        .replaceFirstChar { it.uppercase() })
+                        .replaceFirstChar { it.uppercase() }, color = NightMuted)
                 }
                 IconButton(onClick = { onDateChange(selectedDate.plusDays(1)) }) {
-                    Icon(Icons.Default.ChevronRight, "Día siguiente")
+                    Icon(Icons.Default.ChevronRight, "Día siguiente", tint = NightMuted)
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFF303740))
         }
         val selectedEvents = days[selectedDate].orEmpty().sortedBy { it.begin }
         items(dayBirthdays, key = { "birthday-${it.contactId}" }) { birthday -> BirthdayRow(birthday, selectedDate) }
         if (selectedEvents.isEmpty() && dayBirthdays.isEmpty()) {
-            item { Text("No hay eventos ni cumpleaños para este día.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { Text("Un día despejado. No hay nada en la agenda.", color = NightMuted, modifier = Modifier.padding(vertical = 18.dp)) }
         }
         items(selectedEvents, key = { it.id }) { event -> EventRow(event, repository) { onEventClick(event) } }
         if (upcomingBirthdays.isNotEmpty()) {
             item {
-                Text("Próximos cumpleaños", style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 18.dp, bottom = 8.dp))
+                Text("PRÓXIMOS CUMPLEAÑOS", style = MaterialTheme.typography.labelLarge,
+                    color = BirthdayPink, fontWeight = FontWeight.Bold,
+                    letterSpacing = androidx.compose.ui.unit.sp(1.5),
+                    modifier = Modifier.padding(top = 24.dp, bottom = 4.dp))
             }
             items(upcomingBirthdays, key = { "upcoming-${it.first.contactId}" }) { (birthday, date) ->
                 BirthdayRow(birthday, date)
@@ -537,21 +567,22 @@ private fun nextBirthdayDate(birthday: ContactBirthday, from: LocalDate): LocalD
 @Composable
 private fun BirthdayRow(birthday: ContactBirthday, date: LocalDate) {
     val age = birthday.ageOn(date)
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F3))
+    Row(
+        Modifier.fillMaxWidth().clickable { }.padding(vertical = 12.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Cake, contentDescription = "Cumpleaños", tint = Color(0xFFC44568))
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(birthday.name, fontWeight = FontWeight.SemiBold)
-                val dateLabel = date.format(DateTimeFormatter.ofPattern("d 'de' MMMM", Spanish))
-                Text(if (age != null) "Cumple $age años · $dateLabel" else dateLabel,
-                    color = Color(0xFF9B3D58), style = MaterialTheme.typography.bodySmall)
-            }
+        Box(Modifier.width(3.dp).height(38.dp).clip(RoundedCornerShape(3.dp)).background(BirthdayPink))
+        Spacer(Modifier.width(14.dp))
+        Icon(Icons.Default.Cake, contentDescription = "Cumpleaños", tint = BirthdayPink, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(birthday.name, fontWeight = FontWeight.SemiBold, color = Color(0xFFF3F5F7))
+            val dateLabel = date.format(DateTimeFormatter.ofPattern("d 'de' MMMM", Spanish))
+            Text(if (age != null) "Cumple $age años · $dateLabel" else dateLabel,
+                color = NightMuted, style = MaterialTheme.typography.bodySmall)
         }
     }
+    HorizontalDivider(color = Color(0xFF252B33))
 }
 
 @Composable
@@ -559,20 +590,19 @@ private fun EventRow(event: CalendarEvent, repository: CalendarRepository, onCli
     val zone = ZoneId.systemDefault()
     val time = if (event.allDay) "Todo el día" else
         java.time.Instant.ofEpochMilli(event.begin).atZone(zone).format(TimeFormat)
-    Card(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.width(4.dp).height(44.dp).clip(RoundedCornerShape(4.dp))
-                .background(Color(event.color)))
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(event.title, fontWeight = FontWeight.SemiBold)
-                Text(time, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall)
-            }
-            Icon(Icons.Default.ChevronRight, contentDescription = "Editar evento",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.width(3.dp).height(38.dp).clip(RoundedCornerShape(3.dp)).background(Color(event.color)))
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(event.title, fontWeight = FontWeight.SemiBold, color = Color(0xFFF3F5F7))
+            Text(time, color = NightMuted, style = MaterialTheme.typography.bodySmall)
         }
+        Icon(Icons.Default.ChevronRight, contentDescription = "Editar evento", tint = NightMuted)
     }
+    HorizontalDivider(color = Color(0xFF252B33))
 }
 
 @Composable
@@ -695,6 +725,9 @@ private fun SettingsScreen(
     onEnableContacts: () -> Unit
 ) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Text("CONFIGURACIÓN", color = TimepageCyan, style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold, letterSpacing = androidx.compose.ui.unit.sp(2))
+        Spacer(Modifier.height(16.dp))
         Text("Configuración", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         SettingsRow(Icons.Default.Sync, "Google Calendar", "Sincronización mediante las cuentas de Android")
