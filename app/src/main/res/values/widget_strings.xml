@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_month_description">Calendario mensual con días que tienen eventos</string>
+    <string name="widget_agenda_description">Próximos eventos de tus calendarios</string>
+    <string name="widget_birthday_description">Próximos cumpleaños de tus contactos</string>
+</resources>
