@@ -383,6 +383,9 @@ private fun AgendaScreen(
 ) {
     val days = events.groupBy { repository.toLocalDate(it.begin) }
     val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
+    val upcomingBirthdays = birthdays.mapNotNull { birthday ->
+        nextBirthdayDate(birthday, selectedDate)?.let { birthday to it }
+    }.sortedBy { it.second }.take(20)
     LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -406,7 +409,28 @@ private fun AgendaScreen(
             item { Text("No hay eventos ni cumpleaños para este día.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         items(selectedEvents, key = { it.id }) { event -> EventRow(event, repository) { onEventClick(event) } }
+        if (upcomingBirthdays.isNotEmpty()) {
+            item {
+                Text("Próximos cumpleaños", style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 18.dp, bottom = 8.dp))
+            }
+            items(upcomingBirthdays, key = { "upcoming-${it.first.contactId}" }) { (birthday, date) ->
+                BirthdayRow(birthday, date)
+            }
+        }
     }
+}
+
+private fun nextBirthdayDate(birthday: ContactBirthday, from: LocalDate): LocalDate? {
+    for (year in from.year..(from.year + 8)) {
+        try {
+            val date = LocalDate.of(year, birthday.month, birthday.day)
+            if (!date.isBefore(from)) return date
+        } catch (_: java.time.DateTimeException) {
+            // A February 29 birthday only occurs in leap years.
+        }
+    }
+    return null
 }
 
 @Composable
@@ -421,7 +445,8 @@ private fun BirthdayRow(birthday: ContactBirthday, date: LocalDate) {
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(birthday.name, fontWeight = FontWeight.SemiBold)
-                Text(if (age != null) "Cumple $age años" else "Cumpleaños",
+                val dateLabel = date.format(DateTimeFormatter.ofPattern("d 'de' MMMM", Spanish))
+                Text(if (age != null) "Cumple $age años · $dateLabel" else dateLabel,
                     color = Color(0xFF9B3D58), style = MaterialTheme.typography.bodySmall)
             }
         }
