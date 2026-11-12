@@ -6,16 +6,31 @@
     android:orientation="vertical"
     android:padding="10dp"
     android:background="@drawable/widget_background">
-    <TextView
-        android:id="@+id/widget_month_title"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Calendario"
-        android:textColor="#29304A"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:paddingBottom="5dp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView
+            android:id="@+id/widget_month_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Calendario"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="5dp" />
+        <TextView
+            android:id="@+id/widget_configure"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="⚙"
+            android:textColor="#FFFFFF"
+            android:contentDescription="Configurar transparencia" />
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
