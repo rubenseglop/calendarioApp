@@ -1,25 +1,70 @@
 # Calendario
 
-Aplicación Android nativa de calendario personal. Base inicial preparada para abrir con Android Studio o compilar con Gradle desde PowerShell.
+Calendario es una aplicación Android nativa, gratuita y sin publicidad, pensada para consultar y gestionar tus eventos sin depender de aplicaciones llenas de anuncios.
 
-## Requisitos
+## Enfoque de sincronización
+
+La aplicación utiliza el **proveedor de calendarios de Android (CalendarContract)**. Lee y escribe en las cuentas y calendarios que ya están configurados en el dispositivo, incluidos los calendarios de Google.
+
+- No necesita iniciar sesión en Google dentro de la aplicación.
+- No gestiona contraseñas, claves OAuth ni tokens propios.
+- La sincronización con Google la realiza Android mediante la cuenta configurada y sus ajustes de sincronización.
+- Los permisos de lectura y escritura se solicitan al usuario en tiempo de ejecución.
+- Los eventos se guardan directamente en el calendario que el usuario elija.
+
+La aplicación no envía los eventos a servidores propios.
+
+## Funcionalidades implementadas
+
+- Calendario mensual con navegación entre meses.
+- Indicadores en los días que tienen eventos.
+- Consulta de eventos reales del dispositivo.
+- Vista de agenda para el día seleccionado.
+- Creación, edición y eliminación de eventos.
+- Selección entre calendarios disponibles con permiso de escritura.
+- Eventos de día completo.
+- Campos de fecha, hora y descripción.
+- Interfaz en español y diseño Material 3.
+- Compatible con Android 10 (API 29) y posteriores.
+
+## Próximas funcionalidades
+
+- Widgets de pantalla de inicio (mes, agenda y próximos eventos).
+- Recordatorios y notificaciones.
+- Búsqueda de eventos.
+- Vistas semanal y diaria más completas.
+- Reglas de recurrencia y mejoras de edición.
+- Tareas y listas persistentes.
+- Temas y personalización.
+
+## Requisitos de desarrollo
+
 - JDK 17
 - Android SDK Platform 35
 - Android Gradle Plugin 8.13.2
-- Android Studio reciente (recomendado) o Gradle desde terminal
+- Gradle 8.13
+- Android Studio reciente (recomendado)
 
-## Abrir
-1. Descomprime el proyecto.
-2. En Android Studio: **Open** y selecciona la carpeta `Calendario`.
-3. Espera a que termine la sincronización de Gradle.
-4. Ejecuta la configuración `app` en un emulador o móvil Android.
+## Compilar
 
-## Compilar desde PowerShell
-Cuando tengas instalado Android SDK y Gradle:
-```powershell
+Desde la raíz del proyecto:
+
+```bash
 gradle :app:assembleDebug
 ```
-El APK se generará en `app\build\outputs\apk\debug\app-debug.apk`.
 
-## Estado
-Esta es la base funcional inicial: navegación inferior, pantalla mensual, agenda, tareas y ajustes; datos locales de demostración. Room, widgets Glance, alarmas y sincronización Google Calendar se incorporarán en las siguientes iteraciones.
+El APK se genera en:
+
+```
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+También se puede descargar el APK de cada compilación desde la sección **Actions** de GitHub. Al publicar una etiqueta `v*`, el workflow crea una Release y adjunta el APK.
+
+## Privacidad y permisos
+
+Para mostrar y modificar eventos, Android solicitará los permisos `READ_CALENDAR` y `WRITE_CALENDAR`. Si se deniegan, la aplicación no puede acceder a los calendarios. Los calendarios visibles y editables dependen de las cuentas y permisos configurados en el propio dispositivo.
+
+## Licencia
+
+Proyecto personal de código abierto. Se publicará la licencia del proyecto en una próxima revisión.
