@@ -47,6 +47,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent { CalendarioTheme { CalendarApp() } }
     }
+
+    override fun onResume() {
+        super.onResume()
+        WidgetUpdater.refresh(this)
+    }
 }
 
 private enum class Destination(val label: String) {
@@ -699,8 +704,8 @@ private fun SettingsScreen(
             Button(onClick = onEnableContacts) { Text("Activar cumpleaños de contactos") }
         }
         SettingsRow(Icons.Default.Notifications, "Notificaciones", "En una próxima versión")
-        SettingsRow(Icons.Default.Widgets, "Widgets", "En una próxima versión")
-        SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.3.0")
+        SettingsRow(Icons.Default.Widgets, "Widgets", "Calendario mensual, agenda y cumpleaños disponibles en la pantalla de inicio")
+        SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.4.0")
         Spacer(Modifier.height(12.dp))
         Text("Tus eventos permanecen en los calendarios del dispositivo. La sincronización con Google depende de la cuenta y de los ajustes de sincronización de Android.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
