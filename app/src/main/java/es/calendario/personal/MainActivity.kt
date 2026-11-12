@@ -27,7 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext\nimport kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch\nimport kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -412,6 +413,7 @@ private fun EventEditorDialog(
     onDelete: suspend (Long) -> Unit
 ) {
     val zone = ZoneId.systemDefault()
+    val scope = rememberCoroutineScope()
     var title by remember(event?.id) { mutableStateOf(event?.title.orEmpty()) }
     var description by remember(event?.id) { mutableStateOf("") }
     var dateText by remember(event?.id) {
@@ -477,9 +479,8 @@ private fun EventEditorDialog(
                     val start = LocalTime.parse(startText, TimeFormat)
                     val end = LocalTime.parse(endText, TimeFormat)
                     error = null
-                    androidx.compose.runtime.LaunchedEffect(Unit) { }
                     // The callback performs provider I/O and closes the dialog on success.
-                    kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                    scope.launch {
                         onSave(calendarId, title, description, date, start, end, allDay)
                     }
                 } catch (_: Exception) {
