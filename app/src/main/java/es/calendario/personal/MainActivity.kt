@@ -604,7 +604,7 @@ private fun SettingsScreen(
         }
         SettingsRow(Icons.Default.Notifications, "Notificaciones", "En una próxima versión")
         SettingsRow(Icons.Default.Widgets, "Widgets", "En una próxima versión")
-        SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.2.0")
+        SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.3.0")
         Spacer(Modifier.height(12.dp))
         Text("Tus eventos permanecen en los calendarios del dispositivo. La sincronización con Google depende de la cuenta y de los ajustes de sincronización de Android.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
