@@ -296,11 +296,56 @@ private fun MonthScreen(
     onSelect: (LocalDate) -> Unit,
     onEventClick: (CalendarEvent) -> Unit
 ) {
-    val dayEvents = events.filter { repository.toLocalDate(it.begin) == selectedDate }
-        .sortedBy { it.begin }
-    val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val landscape = maxWidth > maxHeight
+        if (landscape) {
+            Row(
+                Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    MonthCalendarPanel(
+                        month, selectedDate, events, repository, birthdays,
+                        onPrevious, onNext, onSelect
+                    )
+                }
+                VerticalDivider(
+                    Modifier.fillMaxHeight(),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    DayEventsPanel(
+                        selectedDate, events, repository, birthdays, onEventClick
+                    )
+                }
+            }
+        } else {
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                MonthCalendarPanel(
+                    month, selectedDate, events, repository, birthdays,
+                    onPrevious, onNext, onSelect
+                )
+                DayEventsPanel(
+                    selectedDate, events, repository, birthdays, onEventClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+@Composable
+private fun MonthCalendarPanel(
+    month: YearMonth,
+    selectedDate: LocalDate,
+    events: List<CalendarEvent>,
+    repository: CalendarRepository,
+    birthdays: List<ContactBirthday>,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSelect: (LocalDate) -> Unit
+) {
+    Column(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -314,7 +359,6 @@ private fun MonthScreen(
             )
             IconButton(onClick = onNext) { Icon(Icons.Default.ChevronRight, "Mes siguiente") }
         }
-
         Row(Modifier.fillMaxWidth()) {
             listOf("L", "M", "X", "J", "V", "S", "D").forEach {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -327,17 +371,13 @@ private fun MonthScreen(
                 }
             }
         }
-
         val offset = month.atDay(1).dayOfWeek.value - 1
         val cells = ((offset + month.lengthOfMonth() + 6) / 7) * 7
         for (week in 0 until cells / 7) {
             Row(Modifier.fillMaxWidth()) {
                 for (column in 0..6) {
                     val day = week * 7 + column - offset + 1
-                    Box(
-                        Modifier.weight(1f).aspectRatio(0.95f),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(Modifier.weight(1f).aspectRatio(0.95f), contentAlignment = Alignment.Center) {
                         if (day in 1..month.lengthOfMonth()) {
                             val date = month.atDay(day)
                             val selected = date == selectedDate
@@ -376,10 +416,26 @@ private fun MonthScreen(
                 }
             }
         }
+    }
+}
 
+@Composable
+private fun DayEventsPanel(
+    selectedDate: LocalDate,
+    events: List<CalendarEvent>,
+    repository: CalendarRepository,
+    birthdays: List<ContactBirthday>,
+    onEventClick: (CalendarEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dayEvents = events.filter { repository.toLocalDate(it.begin) == selectedDate }
+        .sortedBy { it.begin }
+    val dayBirthdays = birthdays.filter { it.occursOn(selectedDate) }
+
+    Column(modifier.fillMaxWidth()) {
         HorizontalDivider(
-            Modifier.padding(top = 4.dp),
-            color = MaterialTheme.colorScheme.outlineVariant
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(top = 4.dp)
         )
         Text(
             selectedDate.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Spanish))
@@ -388,9 +444,6 @@ private fun MonthScreen(
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
         )
-
-        // Una única lista ocupa todo el espacio restante y permite desplazarse
-        // por todos los eventos y cumpleaños del día, no solo por el primero.
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
