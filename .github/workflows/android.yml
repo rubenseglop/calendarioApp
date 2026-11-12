@@ -1,4 +1,3 @@
-
 name: Compilar Calendario Android
 
 on:
@@ -34,6 +33,9 @@ jobs:
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Evita instalar el paquete obsoleto "tools", retirado del repositorio de Google.
+          packages: 'platform-tools'
 
       - name: Configurar Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
