@@ -103,6 +103,13 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.widget_root, openApp)
+            val configureIntent = Intent(context, WidgetConfigActivity::class.java)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            val configurePending = PendingIntent.getActivity(
+                context, appWidgetId * 10 + 9, configureIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_configure, configurePending)
             configureActions(context, views, appWidgetId)
             manager.updateAppWidget(appWidgetId, views)
         }
