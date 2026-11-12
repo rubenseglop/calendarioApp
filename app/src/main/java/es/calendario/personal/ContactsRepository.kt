@@ -59,14 +59,23 @@ class ContactsRepository(private val context: Context) {
     }
 
     private fun parseBirthday(value: String): Triple<Int?, Int, Int>? {
-        val match = Regex("^(?:(\\d{4})-)?(\\d{2})-(\\d{2})$").matchEntire(value)
-            ?: Regex("^(\\d{4})(\\d{2})(\\d{2})$").matchEntire(value)
-                ?.let { return Triple(it.groupValues[1].toIntOrNull(), it.groupValues[2].toInt(), it.groupValues[3].toInt()) }
+        val normalized = value.removePrefix("--")
+        val match = Regex("^(?:(\\d{4})-)?(\\d{2})-(\\d{2})$").matchEntire(normalized)
+            ?: Regex("^(\\d{4})(\\d{2})(\\d{2})$").matchEntire(normalized)
+                ?.let { return validBirthday(it.groupValues[2].toInt(), it.groupValues[3].toInt(), it.groupValues[1].toIntOrNull()) }
             ?: return null
         val year = match.groupValues[1].takeIf { it.isNotBlank() }?.toIntOrNull()
         val month = match.groupValues[2].toIntOrNull() ?: return null
         val day = match.groupValues[3].toIntOrNull() ?: return null
-        if (month !in 1..12 || day !in 1..31) return null
-        return Triple(year, month, day)
+        return validBirthday(month, day, year)
+    }
+
+    private fun validBirthday(month: Int, day: Int, year: Int?): Triple<Int?, Int, Int>? {
+        return try {
+            java.time.LocalDate.of(2000, month, day)
+            Triple(year, month, day)
+        } catch (_: java.time.DateTimeException) {
+            null
+        }
     }
 }
