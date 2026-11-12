@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "es.calendario.personal"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "es.calendario.personal"
