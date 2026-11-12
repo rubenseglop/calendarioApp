@@ -98,7 +98,7 @@ class CalendarRepository(private val context: Context) {
             put(CalendarContract.Events.DESCRIPTION, description)
             put(CalendarContract.Events.DTSTART, begin)
             put(CalendarContract.Events.DTEND, end)
-            put(CalendarContract.Events.EVENT_TIMEZONE, ZoneId.systemDefault().id)
+            put(CalendarContract.Events.EVENT_TIMEZONE, if (allDay) "UTC" else ZoneId.systemDefault().id)
             put(CalendarContract.Events.ALL_DAY, if (allDay) 1 else 0)
         }
         return if (eventId == null) {
@@ -111,6 +111,21 @@ class CalendarRepository(private val context: Context) {
             if (updated == 0) error("No se ha podido actualizar el evento")
             eventId
         }
+    }
+
+
+    fun eventDescription(eventId: Long): String {
+        val uri = android.content.ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
+        context.contentResolver.query(
+            uri,
+            arrayOf(CalendarContract.Events.DESCRIPTION),
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) return cursor.getString(0).orEmpty()
+        }
+        return ""
     }
 
     fun deleteEvent(eventId: Long) {
