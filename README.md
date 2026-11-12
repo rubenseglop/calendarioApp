@@ -35,7 +35,6 @@ La aplicación no envía los eventos a servidores propios.
 ## Próximas funcionalidades
 
 - Recordatorios y notificaciones.
-- Recordatorios y notificaciones.
 - Búsqueda de eventos.
 - Vistas semanal y diaria más completas.
 - Reglas de recurrencia y mejoras de edición.
@@ -45,7 +44,7 @@ La aplicación no envía los eventos a servidores propios.
 ## Requisitos de desarrollo
 
 - JDK 17
-- Android SDK Platform 35
+- Android SDK Platform 36
 - Android Gradle Plugin 8.13.2
 - Gradle 8.13
 - Android Studio reciente (recomendado)
