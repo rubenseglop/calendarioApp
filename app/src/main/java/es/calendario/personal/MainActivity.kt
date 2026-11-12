@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -379,7 +380,7 @@ private fun MonthCalendarPanel(
                     style = MaterialTheme.typography.titleLarge,
                     color = TimepageCyan,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = androidx.compose.ui.unit.sp(2)
+                    letterSpacing = 2.sp
                 )
                 Text(month.year.toString(), style = MaterialTheme.typography.labelMedium, color = NightMuted)
             }
@@ -542,7 +543,7 @@ private fun AgendaScreen(
             item {
                 Text("PRÓXIMOS CUMPLEAÑOS", style = MaterialTheme.typography.labelLarge,
                     color = BirthdayPink, fontWeight = FontWeight.Bold,
-                    letterSpacing = androidx.compose.ui.unit.sp(1.5),
+                    letterSpacing = 1.5.sp,
                     modifier = Modifier.padding(top = 24.dp, bottom = 4.dp))
             }
             items(upcomingBirthdays, key = { "upcoming-${it.first.contactId}" }) { (birthday, date) ->
@@ -728,7 +729,6 @@ private fun SettingsScreen(
         Text("CONFIGURACIÓN", color = TimepageCyan, style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold, letterSpacing = androidx.compose.ui.unit.sp(2))
         Spacer(Modifier.height(16.dp))
-        Text("Configuración", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         SettingsRow(Icons.Default.Sync, "Google Calendar", "Sincronización mediante las cuentas de Android")
         SettingsRow(Icons.Default.CalendarMonth, "Calendarios disponibles", "$calendarCount calendarios con escritura")
@@ -738,7 +738,7 @@ private fun SettingsScreen(
         }
         SettingsRow(Icons.Default.Notifications, "Notificaciones", "En una próxima versión")
         SettingsRow(Icons.Default.Widgets, "Widgets", "Calendario mensual, agenda y cumpleaños disponibles en la pantalla de inicio")
-        SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.6.1")
+        SettingsRow(Icons.Default.Info, "Acerca de", "Calendario · versión 0.7.0")
         Spacer(Modifier.height(12.dp))
         Text("Tus eventos permanecen en los calendarios del dispositivo. La sincronización con Google depende de la cuenta y de los ajustes de sincronización de Android.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)

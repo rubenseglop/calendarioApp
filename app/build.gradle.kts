@@ -24,8 +24,8 @@ android {
         applicationId = "es.calendario.personal"
         minSdk = 29
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.6.1"
+        versionCode = 8
+        versionName = "0.7.0"
     }
 
     buildFeatures { compose = true }

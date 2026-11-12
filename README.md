@@ -29,7 +29,9 @@ La aplicación no envía los eventos a servidores propios.
 - Cumpleaños del día en la vista de agenda y listado de próximos cumpleaños.
 - Cálculo de edad cuando el contacto incluye el año de nacimiento.
 - Compatibilidad con fechas de cumpleaños que no incluyen año (incluidos los 29 de febrero).
-- Interfaz en español y diseño Material 3.
+- Interfaz en español con estética oscura inspirada en Moleskine Timepage.
+- Calendario mensual con mes en turquesa, selección circular, días adyacentes atenuados e indicadores de eventos y cumpleaños.
+- Vista vertical con calendario y agenda, y vista horizontal dividida en dos paneles.
 - Compatible con Android 10 (API 29) y posteriores.
 
 ## Próximas funcionalidades
