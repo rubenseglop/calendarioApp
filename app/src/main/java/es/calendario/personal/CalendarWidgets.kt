@@ -97,7 +97,7 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
                 .getInt(WidgetConfigActivity.opacityKey(appWidgetId), 88)
             val alpha = opacity.coerceIn(0, 100) * 255 / 100
             views.setInt(R.id.widget_root, "setBackgroundColor",
-                android.graphics.Color.argb(alpha, 28, 35, 54))
+                android.graphics.Color.argb(alpha, 247, 247, 252))
             val openApp = PendingIntent.getActivity(
                 context, appWidgetId, Intent(context, MainActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
