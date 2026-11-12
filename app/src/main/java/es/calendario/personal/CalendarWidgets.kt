@@ -73,23 +73,20 @@ private object WidgetData {
 object WidgetUpdater {
     fun refresh(context: Context) {
         val manager = AppWidgetManager.getInstance(context)
-        listOf(MonthCalendarWidgetProvider::class.java, AgendaWidgetProvider::class.java,
-            BirthdayWidgetProvider::class.java).forEach { provider ->
-            val component = ComponentName(context, provider)
-            val ids = manager.getAppWidgetIds(component)
-            if (ids.isNotEmpty()) {
-                context.sendBroadcast(
-                    Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-                        .setComponent(component)
-                        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                )
-            }
+        listOf(MonthCalendarWidgetProvider(), AgendaWidgetProvider(),
+            BirthdayWidgetProvider()).forEach { provider ->
+            provider.refresh(context, manager)
         }
     }
 }
 
 abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
     protected abstract fun createViews(context: Context): RemoteViews
+
+    fun refresh(context: Context, manager: AppWidgetManager = AppWidgetManager.getInstance(context)) {
+        val ids = manager.getAppWidgetIds(ComponentName(context, javaClass))
+        if (ids.isNotEmpty()) onUpdate(context, manager, ids)
+    }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         val views = createViews(context)
