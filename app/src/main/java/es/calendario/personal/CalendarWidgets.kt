@@ -88,14 +88,24 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
         if (ids.isNotEmpty()) onUpdate(context, manager, ids)
     }
 
+    protected open fun configureActions(context: Context, views: RemoteViews, appWidgetId: Int) {}
+
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
-        val views = createViews(context)
-        val openApp = PendingIntent.getActivity(
-            context, 0, Intent(context, MainActivity::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_root, openApp)
-        appWidgetIds.forEach { manager.updateAppWidget(it, views) }
+        appWidgetIds.forEach { appWidgetId ->
+            val views = createViews(context)
+            val opacity = context.getSharedPreferences(WidgetConfigActivity.PREFS, Context.MODE_PRIVATE)
+                .getInt(WidgetConfigActivity.opacityKey(appWidgetId), 88)
+            val alpha = opacity.coerceIn(0, 100) * 255 / 100
+            views.setInt(R.id.widget_root, "setBackgroundColor",
+                android.graphics.Color.argb(alpha, 28, 35, 54))
+            val openApp = PendingIntent.getActivity(
+                context, appWidgetId, Intent(context, MainActivity::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_root, openApp)
+            configureActions(context, views, appWidgetId)
+            manager.updateAppWidget(appWidgetId, views)
+        }
     }
 }
 
@@ -140,6 +150,32 @@ class MonthCalendarWidgetProvider : BaseCalendarWidgetProvider() {
 }
 
 class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
+    override fun configureActions(context: Context, views: RemoteViews, appWidgetId: Int) {
+        val now = System.currentTimeMillis()
+        val start = java.time.Instant.ofEpochMilli(now).atZone(widgetZone)
+            .withSecond(0).withNano(0).plusMinutes(5).toInstant().toEpochMilli()
+        val eventIntent = Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI)
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, start + 60 * 60 * 1000L)
+        val dayStart = LocalDate.now().atStartOfDay(widgetZone).toInstant().toEpochMilli()
+        val dayEnd = LocalDate.now().plusDays(1).atStartOfDay(widgetZone).toInstant().toEpochMilli()
+        val dayIntent = Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI)
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, dayStart)
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, dayEnd)
+            .putExtra(CalendarContract.Events.ALL_DAY, true)
+        val reminderIntent = Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI)
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, start + 15 * 60 * 1000L)
+            .putExtra(CalendarContract.Events.HAS_ALARM, true)
+        fun pending(code: Int, intent: Intent) = PendingIntent.getActivity(
+            context, appWidgetId * 10 + code, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.widget_add_event, pending(1, eventIntent))
+        views.setOnClickPendingIntent(R.id.widget_add_day, pending(2, dayIntent))
+        views.setOnClickPendingIntent(R.id.widget_add_reminder, pending(3, reminderIntent))
+    }
+
     override fun createViews(context: Context): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_list)
         views.setTextViewText(R.id.widget_list_title, "Próximos eventos")
@@ -169,6 +205,7 @@ class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
 class BirthdayWidgetProvider : BaseCalendarWidgetProvider() {
     override fun createViews(context: Context): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_list)
+        views.setViewVisibility(R.id.widget_action_buttons, android.view.View.GONE)
         views.setTextViewText(R.id.widget_list_title, "Cumpleaños")
         views.setTextViewText(R.id.widget_list_subtitle, "De tus contactos")
         views.removeAllViews(R.id.widget_list_items)
