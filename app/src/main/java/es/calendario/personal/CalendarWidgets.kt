@@ -18,6 +18,30 @@ import java.util.Locale
 private val widgetLocale = Locale("es", "ES")
 private val widgetZone: ZoneId get() = ZoneId.systemDefault()
 
+private fun widgetAccent(settings: AppSettings): Int = when (settings.accentColor) {
+    "blue" -> android.graphics.Color.rgb(130, 169, 255)
+    "green" -> android.graphics.Color.rgb(121, 214, 165)
+    "purple" -> android.graphics.Color.rgb(182, 154, 255)
+    "pink" -> android.graphics.Color.rgb(255, 130, 157)
+    else -> android.graphics.Color.rgb(98, 214, 208)
+}
+
+private fun widgetIsDark(context: Context, settings: AppSettings): Boolean = when (settings.theme) {
+    "dark" -> true
+    "light" -> false
+    else -> (context.resources.configuration.uiMode and
+        android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+        android.content.res.Configuration.UI_MODE_NIGHT_YES
+}
+
+private fun widgetPalette(context: Context, settings: AppSettings): Triple<Int, Int, Int> {
+    val dark = widgetIsDark(context, settings)
+    val background = if (dark) android.graphics.Color.rgb(25, 29, 35) else android.graphics.Color.rgb(247, 248, 250)
+    val primaryText = if (dark) android.graphics.Color.rgb(243, 245, 247) else android.graphics.Color.rgb(25, 29, 35)
+    val secondaryText = if (dark) android.graphics.Color.rgb(133, 141, 152) else android.graphics.Color.rgb(98, 107, 118)
+    return Triple(background, primaryText, secondaryText)
+}
+
 private data class WidgetEvent(val title: String, val begin: Long, val end: Long, val allDay: Boolean, val calendarId: Long)
 
 private object WidgetData {
@@ -105,8 +129,21 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
             val opacity = context.getSharedPreferences(WidgetConfigActivity.PREFS, Context.MODE_PRIVATE)
                 .getInt(WidgetConfigActivity.opacityKey(appWidgetId), 88)
             val alpha = opacity.coerceIn(0, 100) * 255 / 100
-            views.setInt(R.id.widget_root, "setBackgroundColor",
-                android.graphics.Color.argb(alpha, 247, 247, 252))
+            val settings = AppSettings.load(context)
+            val (background, primaryText, secondaryText) = widgetPalette(context, settings)
+            val accent = widgetAccent(settings)
+            views.setInt(R.id.widget_root, "setBackgroundColor", android.graphics.Color.argb(
+                alpha, android.graphics.Color.red(background), android.graphics.Color.green(background),
+                android.graphics.Color.blue(background)))
+            listOf(R.id.widget_list_title, R.id.widget_month_title, R.id.widget_configure).forEach {
+                runCatching { views.setTextColor(it, primaryText) }
+            }
+            listOf(R.id.widget_list_subtitle, R.id.widget_list_empty, R.id.widget_month_hint).forEach {
+                runCatching { views.setTextColor(it, secondaryText) }
+            }
+            listOf(R.id.widget_add_event, R.id.widget_add_day, R.id.widget_add_reminder).forEach {
+                runCatching { views.setInt(it, "setBackgroundColor", accent) }
+            }
             val openApp = PendingIntent.getActivity(
                 context, appWidgetId, Intent(context, MainActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -129,18 +166,23 @@ class MonthCalendarWidgetProvider : BaseCalendarWidgetProvider() {
     override fun createViews(context: Context): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_month)
         val month = YearMonth.now()
+        val settings = AppSettings.load(context)
+        val accent = widgetAccent(settings)
+        val (_, primaryText, secondaryText) = widgetPalette(context, settings)
         val events = WidgetData.events(context, month.atDay(1), month.plusMonths(1).atDay(1))
         val eventDays = events.map { java.time.Instant.ofEpochMilli(it.begin).atZone(widgetZone).toLocalDate().dayOfMonth }.toSet()
         views.setTextViewText(R.id.widget_month_title,
             month.month.getDisplayName(TextStyle.FULL, widgetLocale).replaceFirstChar { it.uppercase() } + " " + month.year)
+        views.setTextColor(R.id.widget_month_title, accent)
         views.removeAllViews(R.id.widget_month_days)
 
-        val firstDay = AppSettings.load(context).firstDayOfWeek
+        val firstDay = settings.firstDayOfWeek
         val weekdayIds = intArrayOf(R.id.widget_weekday_0, R.id.widget_weekday_1, R.id.widget_weekday_2,
             R.id.widget_weekday_3, R.id.widget_weekday_4, R.id.widget_weekday_5, R.id.widget_weekday_6)
         val weekdayLabels = listOf("L", "M", "X", "J", "V", "S", "D")
         weekdayIds.forEachIndexed { index, id ->
             views.setTextViewText(id, weekdayLabels[(firstDay - 1 + index) % 7])
+            views.setTextColor(id, secondaryText)
         }
         val offset = (month.atDay(1).dayOfWeek.value - firstDay + 7) % 7
         repeat(6) { week ->
@@ -155,8 +197,9 @@ class MonthCalendarWidgetProvider : BaseCalendarWidgetProvider() {
                     if (LocalDate.now() == month.atDay(day)) {
                         cell.setInt(R.id.widget_month_day_text, "setBackgroundResource", R.drawable.widget_today_background)
                         cell.setTextColor(R.id.widget_month_day_text, android.graphics.Color.WHITE)
+                        cell.setInt(R.id.widget_month_day_text, "setBackgroundColor", accent)
                     } else {
-                        cell.setTextColor(R.id.widget_month_day_text, android.graphics.Color.rgb(45, 48, 62))
+                        cell.setTextColor(R.id.widget_month_day_text, primaryText)
                     }
                 } else {
                     cell.setTextViewText(R.id.widget_month_day_text, "")
@@ -167,6 +210,7 @@ class MonthCalendarWidgetProvider : BaseCalendarWidgetProvider() {
         }
         views.setTextViewText(R.id.widget_month_hint,
             if (events.isEmpty()) "Pulsa para abrir tu calendario" else "• Días con eventos")
+        views.setTextColor(R.id.widget_month_hint, secondaryText)
         return views
     }
 }
@@ -205,6 +249,11 @@ class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
         views.removeAllViews(R.id.widget_list_items)
         val today = LocalDate.now()
         val widgetSettings = AppSettings.load(context)
+        val accent = widgetAccent(widgetSettings)
+        val (_, primaryText, secondaryText) = widgetPalette(context, widgetSettings)
+        views.setTextColor(R.id.widget_list_title, primaryText)
+        views.setTextColor(R.id.widget_list_subtitle, secondaryText)
+        views.setTextColor(R.id.widget_list_empty, secondaryText)
         val events = WidgetData.events(context, today, today.plusDays(widgetSettings.widgetDays.toLong()))
             .take(widgetSettings.widgetEventCount)
         if (events.isEmpty()) {
@@ -223,13 +272,16 @@ class AgendaWidgetProvider : BaseCalendarWidgetProvider() {
                             .replaceFirstChar { it.uppercase() }
                     }
                     section.setTextViewText(R.id.widget_section_title, label)
+                    section.setTextColor(R.id.widget_section_title, accent)
                     views.addView(R.id.widget_list_items, section)
                     dayEvents.forEach { event ->
                         val item = RemoteViews(context.packageName, R.layout.widget_list_item)
                         val eventDate = java.time.Instant.ofEpochMilli(event.begin).atZone(widgetZone)
                         val timeLabel = if (event.allDay) "Todo el día" else eventDate.format(DateTimeFormatter.ofPattern("HH:mm"))
                         item.setTextViewText(R.id.widget_item_title, event.title)
+                        item.setTextColor(R.id.widget_item_title, primaryText)
                         item.setTextViewText(R.id.widget_item_detail, timeLabel)
+                        item.setTextColor(R.id.widget_item_detail, secondaryText)
                         views.addView(R.id.widget_list_items, item)
                     }
                 }
@@ -246,6 +298,11 @@ class BirthdayWidgetProvider : BaseCalendarWidgetProvider() {
         views.setTextViewText(R.id.widget_list_subtitle, "De tus contactos")
         views.removeAllViews(R.id.widget_list_items)
         val widgetSettings = AppSettings.load(context)
+        val accent = widgetAccent(widgetSettings)
+        val (_, primaryText, secondaryText) = widgetPalette(context, widgetSettings)
+        views.setTextColor(R.id.widget_list_title, primaryText)
+        views.setTextColor(R.id.widget_list_subtitle, secondaryText)
+        views.setTextColor(R.id.widget_list_empty, secondaryText)
         val birthdays = WidgetData.birthdays(context, LocalDate.now(), widgetSettings.widgetDays, widgetSettings.widgetEventCount)
         if (birthdays.isEmpty()) {
             views.setTextViewText(R.id.widget_list_empty,
@@ -258,8 +315,10 @@ class BirthdayWidgetProvider : BaseCalendarWidgetProvider() {
                 val item = RemoteViews(context.packageName, R.layout.widget_list_item)
                 val age = birthday.ageOn(date)?.let { " · $it años" }.orEmpty()
                 item.setTextViewText(R.id.widget_item_title, birthday.name)
+                item.setTextColor(R.id.widget_item_title, primaryText)
                 item.setTextViewText(R.id.widget_item_detail,
                     date.format(DateTimeFormatter.ofPattern("EEE d MMM", widgetLocale)) + age)
+                item.setTextColor(R.id.widget_item_detail, secondaryText)
                 views.addView(R.id.widget_list_items, item)
             }
         }
