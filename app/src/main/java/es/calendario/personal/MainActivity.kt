@@ -33,6 +33,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -186,16 +187,17 @@ private fun CalendarApp() {
     if (showEditor) {
         EventEditorDialog(
             event = editingEvent,
+            repository = repository,
             selectedDate = selectedDate,
             calendars = calendars,
             onDismiss = { showEditor = false },
             onSave = { calendarId, title, description, date, start, end, allDay ->
                 try {
                     val zone = ZoneId.systemDefault()
-                    val begin = date.atTime(start).atZone(zone).toInstant().toEpochMilli()
-                    val finishDate = if (allDay) date.plusDays(1) else date
-                    val finishTime = if (allDay) LocalTime.MIDNIGHT else end
-                    val finish = finishDate.atTime(finishTime).atZone(zone).toInstant().toEpochMilli()
+                    val begin = if (allDay) date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                        else date.atTime(start).atZone(zone).toInstant().toEpochMilli()
+                    val finish = if (allDay) date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                        else date.atTime(end).atZone(zone).toInstant().toEpochMilli()
                     if (!allDay && finish <= begin) {
                         message = "La hora de fin debe ser posterior a la de inicio."
                     } else {
@@ -401,6 +403,7 @@ private fun EventRow(event: CalendarEvent, repository: CalendarRepository, onCli
 @Composable
 private fun EventEditorDialog(
     event: CalendarEvent?,
+    repository: CalendarRepository,
     selectedDate: LocalDate,
     calendars: List<WritableCalendar>,
     onDismiss: () -> Unit,
@@ -411,8 +414,13 @@ private fun EventEditorDialog(
     val scope = rememberCoroutineScope()
     var title by remember(event?.id) { mutableStateOf(event?.title.orEmpty()) }
     var description by remember(event?.id) { mutableStateOf("") }
+    LaunchedEffect(event?.id) {
+        if (event != null) {
+            description = withContext(Dispatchers.IO) { repository.eventDescription(event.id) }
+        }
+    }
     var dateText by remember(event?.id) {
-        mutableStateOf(event?.let { InstantDate(it.begin, zone).toString() } ?: selectedDate.toString())
+        mutableStateOf(event?.let { InstantDate(it.begin, if (it.allDay) ZoneOffset.UTC else zone).toString() } ?: selectedDate.toString())
     }
     var startText by remember(event?.id) {
         mutableStateOf(event?.let { InstantTime(it.begin, zone).format(TimeFormat) } ?: LocalTime.now().withMinute(0).format(TimeFormat))
