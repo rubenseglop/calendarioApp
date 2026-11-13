@@ -1,81 +1,119 @@
 # Calendario
 
-Calendario es una aplicación Android nativa, gratuita y sin publicidad, pensada para consultar y gestionar tus eventos sin depender de aplicaciones llenas de anuncios.
+Aplicación de calendario nativa para Android, en español, gratuita y sin publicidad. Reúne en una interfaz sencilla los eventos del dispositivo, la agenda diaria, los cumpleaños de tus contactos y la gestión de tareas de Google.
 
-## Enfoque de sincronización
+<p align="center">
+  <strong>Android 10 (API 29) o superior</strong> · <strong>Versión 0.9.0</strong> · <strong>Interfaz en español</strong>
+</p>
 
-La aplicación utiliza el **proveedor de calendarios de Android (CalendarContract)**. Lee y escribe en las cuentas y calendarios que ya están configurados en el dispositivo, incluidos los calendarios de Google.
+## Capturas de pantalla
 
-- No necesita iniciar sesión en Google dentro de la aplicación.
-- No gestiona contraseñas, claves OAuth ni tokens propios.
-- La sincronización con Google la realiza Android mediante la cuenta configurada y sus ajustes de sincronización.
-- Los permisos de lectura y escritura se solicitan al usuario en tiempo de ejecución.
-- Los eventos se guardan directamente en el calendario que el usuario elija.
+Próximamente añadiremos capturas reales de la aplicación: vista mensual, agenda, tareas y ajustes.
 
-La aplicación no envía los eventos a servidores propios.
+> Las imágenes se incorporarán cuando dispongamos de capturas tomadas directamente de la app en ejecución. No se utilizan imágenes promocionales que puedan dar una idea distinta de la interfaz real.
 
-## Funcionalidades implementadas
+## Funcionalidades
 
-- Calendario mensual con navegación entre meses.
-- Indicadores en los días que tienen eventos.
-- Consulta de eventos reales del dispositivo.
-- Vista de agenda para el día seleccionado.
-- Creación, edición y eliminación de eventos.
-- Selección entre calendarios visibles para filtrar lo que aparece en la app y en los widgets.
-- Eventos de día completo.
-- Campos de fecha, hora y descripción.
-- Lectura opcional de cumpleaños desde los contactos del teléfono, con control para mostrarlos u ocultarlos.
-- Indicadores especiales de cumpleaños en el calendario mensual.
-- Cumpleaños del día en la vista de agenda y listado de próximos cumpleaños.
+### Calendario y eventos
+- Vista mensual con navegación entre meses y acceso rápido al día actual.
+- Indicadores visuales para los días con eventos y cumpleaños.
+- Lectura, creación, edición y eliminación de eventos en los calendarios configurados en Android.
+- Selección de calendario al crear eventos y filtros de calendarios visibles.
+- Eventos de día completo, descripción, hora de inicio y fin.
+- Duración y recordatorio predeterminados configurables.
+
+### Agenda
+- Vista de agenda para consultar los eventos del día seleccionado.
+- Presentación agrupada por fechas.
+- Cumpleaños del día y próximos cumpleaños, diferenciados de los eventos.
+- Diseño adaptable a orientación vertical y horizontal.
+
+### Cumpleaños
+- Lectura opcional de las fechas de nacimiento guardadas en los contactos del teléfono.
+- Visualización de cumpleaños en el calendario mensual y en la agenda.
 - Cálculo de edad cuando el contacto incluye el año de nacimiento.
-- Compatibilidad con fechas de cumpleaños que no incluyen año (incluidos los 29 de febrero).
-- Tema automático, claro u oscuro y cinco colores de acento configurables.
-- Calendario mensual con mes en turquesa, selección circular, días adyacentes atenuados e indicadores de eventos y cumpleaños.
-- Primer día de la semana configurable (lunes o domingo).
-- Duración y recordatorio predeterminados para los eventos nuevos.
-- Widgets de agenda configurables: horizonte de 7, 14, 30 o 60 días y cantidad máxima de eventos.
+- Compatibilidad con cumpleaños sin año y con el 29 de febrero.
+- Los contactos se consultan localmente: la app no los modifica ni los envía a servidores.
+
+### Google Tasks
+- Conexión opcional con una cuenta de Google.
+- Consulta de tareas pendientes y completadas.
+- Creación, edición, eliminación y marcado de tareas como completadas.
+- Fecha límite opcional; una tarea no reserva una franja horaria como un evento.
+- Las tareas se gestionan en Google Tasks y no se mezclan con los eventos del calendario.
+
+**Configuración necesaria:** para utilizar esta función hay que habilitar Google Tasks API y configurar el cliente OAuth de Android en un proyecto de Google Cloud. La primera autorización se realiza desde la propia aplicación.
+
+### Apariencia y widgets
+- Tema automático, claro u oscuro.
+- Colores de acento configurables.
+- Primer día de la semana configurable.
+- Widget de calendario mensual con navegación entre meses.
+- Widgets de agenda con horizonte y cantidad de eventos configurables.
+- Ajustes de widgets y transparencia individual.
 - Restablecimiento de preferencias sin borrar eventos ni contactos.
-- Vista vertical con calendario y agenda, y vista horizontal dividida en dos paneles.
-- Interfaz en español con estética oscura inspirada en Moleskine Timepage.
-- Compatible con Android 10 (API 29) y posteriores.
+- Interfaz en español con diseño inspirado en calendarios editoriales.
 
-## Google Tasks\n\n- Acceso opcional a Google Tasks mediante Google Identity Services y el permiso OAuth `https://www.googleapis.com/auth/tasks`.\n- Consulta, creación, edición, finalización y eliminación de tareas de la lista predeterminada de Google Tasks.\n- Las tareas se mantienen en la cuenta de Google del usuario; la aplicación no almacena contraseñas ni tokens de acceso de forma persistente.\n- La primera conexión requiere habilitar Google Tasks API y configurar la pantalla de consentimiento y el cliente OAuth Android en Google Cloud Console.\n\n## Próximas funcionalidades
+## Sincronización y almacenamiento
 
-- Notificaciones propias y búsqueda de eventos.
-- Vistas semanal y diaria más completas.
-- Reglas de recurrencia y mejoras de edición.
-- Tareas y listas persistentes.
+**Eventos:** la aplicación utiliza el proveedor de calendarios de Android (`CalendarContract`). Trabaja con las cuentas y calendarios que ya están configurados en el dispositivo, incluidos los de Google. La sincronización con Google depende de la cuenta y de los ajustes de sincronización de Android.
 
-## Requisitos de desarrollo
+**Tareas:** se accede a Google Tasks mediante su API oficial y autorización de Google. No se almacenan contraseñas ni se guarda de forma persistente el token de acceso en la aplicación.
 
-- JDK 17
-- Android SDK Platform 36
-- Android Gradle Plugin 8.13.2
-- Gradle 8.13
-- Android Studio reciente (recomendado)
+**Cumpleaños:** se leen localmente desde los contactos del dispositivo, únicamente si el usuario concede el permiso correspondiente.
 
-## Compilar
+La aplicación no utiliza servidores propios para almacenar eventos, tareas o contactos.
 
-Desde la raíz del proyecto:
+## Privacidad y permisos
+
+Los permisos se solicitan cuando se necesitan:
+
+| Permiso | Para qué se utiliza |
+| --- | --- |
+| `READ_CALENDAR` | Consultar los eventos de los calendarios del dispositivo. |
+| `WRITE_CALENDAR` | Crear, modificar y eliminar eventos. |
+| `READ_CONTACTS` | Leer las fechas de cumpleaños de los contactos (opcional). |
+| Acceso a Internet | Conectar con Google Tasks cuando el usuario decide utilizar esa función. |
+
+Si no se concede el permiso de contactos, el calendario y la agenda siguen funcionando sin mostrar cumpleaños. La aplicación no crea eventos duplicados de cumpleaños en Google Calendar.
+
+## Requisitos
+
+- Android 10 (API 29) o posterior.
+- Para desarrollar: JDK 17, Android SDK Platform 36 y Gradle 8.13.
+- Para utilizar Google Tasks: cuenta de Google y configuración OAuth/API indicada anteriormente.
+
+## Descargar
+
+Consulta la pestaña [Releases](https://github.com/rubenseglop/calendarioApp/releases) para descargar las versiones publicadas.
+
+También puedes consultar las compilaciones y sus resultados en [GitHub Actions](https://github.com/rubenseglop/calendarioApp/actions).
+
+## Compilar desde el código fuente
+
+Clona el repositorio y ejecuta desde su directorio raíz:
 
 ```bash
 gradle :app:assembleDebug
 ```
 
-El APK se genera en:
+El APK de depuración se genera en:
 
 ```
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-También se puede descargar el APK de cada compilación desde la sección **Actions** de GitHub. Al publicar una etiqueta `v*`, el workflow crea una Release y adjunta el APK.
+### Entorno de desarrollo
 
-## Privacidad y permisos
+- Android Gradle Plugin 8.13.2
+- Gradle 8.13
+- Kotlin y Jetpack Compose
+- Android SDK 36
 
-Para mostrar y modificar eventos, Android solicitará los permisos `READ_CALENDAR` y `WRITE_CALENDAR`. Si se deniegan, la aplicación no puede acceder a los calendarios. Los calendarios visibles y editables dependen de las cuentas y permisos configurados en el propio dispositivo.
+## Estado del proyecto
 
-La lectura de cumpleaños es opcional y solicita por separado el permiso `READ_CONTACTS`. Si no se concede, el calendario y la agenda siguen funcionando normalmente, pero no se muestran cumpleaños de contactos. Los datos de contactos se consultan localmente y no se copian a servidores ni se modifican los contactos. Los cumpleaños se representan dentro de esta aplicación; no se crean automáticamente eventos duplicados en Google Calendar.
+La aplicación continúa en desarrollo. Las funciones existentes se mantienen como prioridad; las nuevas integraciones se incorporan de forma gradual.
 
 ## Licencia
 
-Proyecto personal de código abierto. Se publicará la licencia del proyecto en una próxima revisión.
+Todavía no se ha añadido un archivo de licencia al repositorio. Hasta que se publique una licencia explícita, el código no debe considerarse automáticamente de libre reutilización.
