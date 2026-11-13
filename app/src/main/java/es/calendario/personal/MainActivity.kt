@@ -158,7 +158,7 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
             }
         }
     }
-    val connectGoogleTasks = {
+    val connectGoogleTasks: () -> Unit = {
         val request = AuthorizationRequest.builder()
             .setRequestedScopes(listOf(Scope("https://www.googleapis.com/auth/tasks")))
             .build()
