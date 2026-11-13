@@ -42,8 +42,7 @@ import java.util.Locale
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
-import com.google.android.gms.common.api.Status
-import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.auth.api.identity.RevokeAccessRequest
 
 private val Spanish = Locale("es", "ES")
 private val DateFormat = DateTimeFormatter.ISO_LOCAL_DATE
@@ -247,6 +246,7 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
                     val icon = when (destination) {
                         Destination.CALENDAR -> Icons.Default.CalendarMonth
                         Destination.AGENDA -> Icons.Default.ViewAgenda
+                        Destination.TASKS -> Icons.Default.CheckCircle
                         Destination.SETTINGS -> Icons.Default.Settings
                     }
                     NavigationBarItem(
@@ -259,7 +259,7 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
             }
         },
         floatingActionButton = {
-            if (selected != Destination.SETTINGS && permissionGranted) {
+            if (selected != Destination.SETTINGS && selected != Destination.TASKS && permissionGranted) {
                 FloatingActionButton(onClick = {
                     editingEvent = null
                     showEditor = true
@@ -269,6 +269,11 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             when {
+                selected == Destination.TASKS -> GoogleTasksScreen(tasksAccessToken, connectGoogleTasks) {
+                    Identity.getAuthorizationClient(activity).revokeAccess(RevokeAccessRequest.builder().build())
+                        .addOnSuccessListener { tasksAccessToken = null }
+                        .addOnFailureListener { error -> message = error.message ?: "No se ha podido desconectar Google Tasks." }
+                }
                 !permissionGranted -> PermissionScreen {
                     permissionLauncher.launch(arrayOf(
                         Manifest.permission.READ_CALENDAR,
@@ -282,7 +287,6 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
                     onSelect = { selectedDate = it; month = YearMonth.from(it) },
                     onEventClick = { editingEvent = it; showEditor = true }
                 )
-                selected == Destination.TASKS -> GoogleTasksScreen(tasksAccessToken, connectGoogleTasks)
                 selected == Destination.AGENDA -> AgendaScreen(
                     selectedDate, visibleEvents, repository, visibleBirthdays,
                     onDateChange = { selectedDate = it; month = YearMonth.from(it) },

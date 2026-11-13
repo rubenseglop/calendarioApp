@@ -9,12 +9,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -136,7 +139,7 @@ class GoogleTasksRepository {
 }
 
 @Composable
-fun GoogleTasksScreen(accessToken: String?, onConnect: () -> Unit) {
+fun GoogleTasksScreen(accessToken: String?, onConnect: () -> Unit, onDisconnect: () -> Unit) {
     val repository = remember { GoogleTasksRepository() }
     val scope = rememberCoroutineScope()
     var tasks by remember { mutableStateOf(emptyList<GoogleTask>()) }
@@ -179,6 +182,9 @@ fun GoogleTasksScreen(accessToken: String?, onConnect: () -> Unit) {
             if (accessToken != null) {
                 IconButton(onClick = { reload() }, enabled = !loading) {
                     Icon(Icons.Default.Refresh, contentDescription = "Actualizar tareas")
+                }
+                IconButton(onClick = onDisconnect) {
+                    Icon(Icons.Default.Logout, contentDescription = "Desconectar Google Tasks")
                 }
                 IconButton(onClick = { editorTask = null; showEditor = true }) {
                     Icon(Icons.Default.Add, contentDescription = "Nueva tarea")
