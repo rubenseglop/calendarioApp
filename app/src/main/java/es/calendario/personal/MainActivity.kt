@@ -147,15 +147,23 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
     val tasksAuthorizationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            try {
-                val authorization = Identity.getAuthorizationClient(activity)
-                    .getAuthorizationResultFromIntent(result.data)
-                tasksAccessToken = authorization.accessToken
-                if (tasksAccessToken.isNullOrBlank()) message = "Google no ha devuelto un permiso válido para Google Tasks."
-            } catch (e: Exception) {
-                message = e.message ?: "No se ha podido autorizar Google Tasks."
+        // Google Identity puede devolver el resultado de autorización en el Intent
+        // aunque el código de resultado de Activity no sea RESULT_OK. Hay que
+        // intentar extraerlo siempre; ignorarlo deja la pantalla en "Conectar".
+        try {
+            val authorization = Identity.getAuthorizationClient(activity)
+                .getAuthorizationResultFromIntent(result.data)
+            val token = authorization.accessToken
+            if (!token.isNullOrBlank()) {
+                tasksAccessToken = token
+                message = null
+            } else {
+                val granted = authorization.grantedScopes.joinToString()
+                message = "Google ha devuelto una autorización sin token de acceso. Permisos concedidos: ${granted.ifBlank { "ninguno" }}."
             }
+        } catch (e: Exception) {
+            val detail = e.message?.takeIf { it.isNotBlank() } ?: e.javaClass.simpleName
+            message = "No se ha podido completar la autorización de Google Tasks (resultado ${result.resultCode}): $detail"
         }
     }
     val connectGoogleTasks: () -> Unit = {
