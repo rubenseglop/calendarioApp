@@ -1,16 +1,10 @@
 # Calendario
 
-Aplicación de calendario nativa para Android, en español, gratuita y sin publicidad. Reúne en una interfaz sencilla los eventos del dispositivo, la agenda diaria, los cumpleaños de tus contactos y la gestión de tareas de Google.
+Aplicación de calendario nativa para Android, en español, gratuita y sin publicidad. Reúne los eventos del dispositivo, la agenda diaria, los cumpleaños de tus contactos y widgets personalizables.
 
 <p align="center">
-  <strong>Android 10 (API 29) o superior</strong> · <strong>Versión 0.9.0</strong> · <strong>Interfaz en español</strong>
+  <strong>Android 10 (API 29) o superior</strong> · <strong>Versión 0.9.1</strong> · <strong>Interfaz en español</strong>
 </p>
-
-## Capturas de pantalla
-
-Próximamente añadiremos capturas reales de la aplicación: vista mensual, agenda, tareas y ajustes.
-
-> Las imágenes se incorporarán cuando dispongamos de capturas tomadas directamente de la app en ejecución. No se utilizan imágenes promocionales que puedan dar una idea distinta de la interfaz real.
 
 ## Funcionalidades
 
@@ -35,34 +29,23 @@ Próximamente añadiremos capturas reales de la aplicación: vista mensual, agen
 - Compatibilidad con cumpleaños sin año y con el 29 de febrero.
 - Los contactos se consultan localmente: la app no los modifica ni los envía a servidores.
 
-### Google Tasks
-- Conexión opcional con una cuenta de Google.
-- Consulta de tareas pendientes y completadas.
-- Creación, edición, eliminación y marcado de tareas como completadas.
-- Fecha límite opcional; una tarea no reserva una franja horaria como un evento.
-- Las tareas se gestionan en Google Tasks y no se mezclan con los eventos del calendario.
-
-**Configuración necesaria:** para utilizar esta función hay que habilitar Google Tasks API y configurar el cliente OAuth de Android en un proyecto de Google Cloud. La primera autorización se realiza desde la propia aplicación.
-
 ### Apariencia y widgets
 - Tema automático, claro u oscuro.
 - Colores de acento configurables.
 - Primer día de la semana configurable.
 - Widget de calendario mensual con navegación entre meses.
 - Widgets de agenda con horizonte y cantidad de eventos configurables.
+- Widget de cumpleaños.
 - Ajustes de widgets y transparencia individual.
 - Restablecimiento de preferencias sin borrar eventos ni contactos.
-- Interfaz en español con diseño inspirado en calendarios editoriales.
 
 ## Sincronización y almacenamiento
 
 **Eventos:** la aplicación utiliza el proveedor de calendarios de Android (`CalendarContract`). Trabaja con las cuentas y calendarios que ya están configurados en el dispositivo, incluidos los de Google. La sincronización con Google depende de la cuenta y de los ajustes de sincronización de Android.
 
-**Tareas:** se accede a Google Tasks mediante su API oficial y autorización de Google. No se almacenan contraseñas ni se guarda de forma persistente el token de acceso en la aplicación.
-
 **Cumpleaños:** se leen localmente desde los contactos del dispositivo, únicamente si el usuario concede el permiso correspondiente.
 
-La aplicación no utiliza servidores propios para almacenar eventos, tareas o contactos.
+La aplicación no utiliza servidores propios para almacenar eventos ni contactos.
 
 ## Privacidad y permisos
 
@@ -73,7 +56,6 @@ Los permisos se solicitan cuando se necesitan:
 | `READ_CALENDAR` | Consultar los eventos de los calendarios del dispositivo. |
 | `WRITE_CALENDAR` | Crear, modificar y eliminar eventos. |
 | `READ_CONTACTS` | Leer las fechas de cumpleaños de los contactos (opcional). |
-| Acceso a Internet | Conectar con Google Tasks cuando el usuario decide utilizar esa función. |
 
 Si no se concede el permiso de contactos, el calendario y la agenda siguen funcionando sin mostrar cumpleaños. La aplicación no crea eventos duplicados de cumpleaños en Google Calendar.
 
@@ -81,7 +63,6 @@ Si no se concede el permiso de contactos, el calendario y la agenda siguen funci
 
 - Android 10 (API 29) o posterior.
 - Para desarrollar: JDK 17, Android SDK Platform 36 y Gradle 8.13.
-- Para utilizar Google Tasks: cuenta de Google y configuración OAuth/API indicada anteriormente.
 
 ## Descargar
 
@@ -112,7 +93,7 @@ app/build/outputs/apk/debug/app-debug.apk
 
 ## Estado del proyecto
 
-La aplicación continúa en desarrollo. Las funciones existentes se mantienen como prioridad; las nuevas integraciones se incorporan de forma gradual.
+La aplicación continúa en desarrollo. Las funciones existentes se mantienen como prioridad.
 
 ## Licencia
 

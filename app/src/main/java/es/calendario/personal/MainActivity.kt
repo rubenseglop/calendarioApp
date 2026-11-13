@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,10 +38,6 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-import com.google.android.gms.auth.api.identity.AuthorizationRequest
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.common.api.Scope
-import com.google.android.gms.auth.api.identity.RevokeAccessRequest
 
 private val Spanish = Locale("es", "ES")
 private val DateFormat = DateTimeFormatter.ISO_LOCAL_DATE
@@ -61,7 +56,7 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class Destination(val label: String) {
-    CALENDAR("Calendario"), AGENDA("Agenda"), TASKS("Tareas"), SETTINGS("Ajustes")
+    CALENDAR("Calendario"), AGENDA("Agenda"), SETTINGS("Ajustes")
 }
 
 private val NightBackground = Color(0xFF101216)
@@ -142,48 +137,6 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
     var editingEvent by remember { mutableStateOf<CalendarEvent?>(null) }
     var showEditor by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
-    var tasksAccessToken by remember { mutableStateOf<String?>(null) }
-    val activity = context as ComponentActivity
-    val tasksAuthorizationLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        // Google Identity puede devolver el resultado de autorización en el Intent
-        // aunque el código de resultado de Activity no sea RESULT_OK. Hay que
-        // intentar extraerlo siempre; ignorarlo deja la pantalla en "Conectar".
-        try {
-            val authorization = Identity.getAuthorizationClient(activity)
-                .getAuthorizationResultFromIntent(result.data)
-            val token = authorization.accessToken
-            if (!token.isNullOrBlank()) {
-                tasksAccessToken = token
-                message = null
-            } else {
-                val granted = authorization.grantedScopes.joinToString()
-                message = "Google ha devuelto una autorización sin token de acceso. Permisos concedidos: ${granted.ifBlank { "ninguno" }}."
-            }
-        } catch (e: Exception) {
-            val detail = e.message?.takeIf { it.isNotBlank() } ?: e.javaClass.simpleName
-            message = "No se ha podido completar la autorización de Google Tasks (resultado ${result.resultCode}): $detail"
-        }
-    }
-    val connectGoogleTasks: () -> Unit = {
-        val request = AuthorizationRequest.builder()
-            .setRequestedScopes(listOf(Scope("https://www.googleapis.com/auth/tasks")))
-            .build()
-        Identity.getAuthorizationClient(activity).authorize(request)
-            .addOnSuccessListener { authorization ->
-                if (authorization.hasResolution()) {
-                    authorization.pendingIntent?.let { pending ->
-                        tasksAuthorizationLauncher.launch(IntentSenderRequest.Builder(pending.intentSender).build())
-                    }
-                } else {
-                    tasksAccessToken = authorization.accessToken
-                    if (tasksAccessToken.isNullOrBlank()) message = "No se ha recibido autorización de Google Tasks."
-                }
-            }
-            .addOnFailureListener { error -> message = error.message ?: "No se ha podido conectar con Google." }
-    }
-
     val contactsPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> contactsPermission = granted }
@@ -254,7 +207,6 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
                     val icon = when (destination) {
                         Destination.CALENDAR -> Icons.Default.CalendarMonth
                         Destination.AGENDA -> Icons.Default.ViewAgenda
-                        Destination.TASKS -> Icons.Default.CheckCircle
                         Destination.SETTINGS -> Icons.Default.Settings
                     }
                     NavigationBarItem(
@@ -267,7 +219,7 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
             }
         },
         floatingActionButton = {
-            if (selected != Destination.SETTINGS && selected != Destination.TASKS && permissionGranted) {
+            if (selected != Destination.SETTINGS && permissionGranted) {
                 FloatingActionButton(onClick = {
                     editingEvent = null
                     showEditor = true
@@ -277,11 +229,6 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             when {
-                selected == Destination.TASKS -> GoogleTasksScreen(tasksAccessToken, connectGoogleTasks) {
-                    Identity.getAuthorizationClient(activity).revokeAccess(RevokeAccessRequest.builder().build())
-                        .addOnSuccessListener { tasksAccessToken = null }
-                        .addOnFailureListener { error -> message = error.message ?: "No se ha podido desconectar Google Tasks." }
-                }
                 !permissionGranted -> PermissionScreen {
                     permissionLauncher.launch(arrayOf(
                         Manifest.permission.READ_CALENDAR,
@@ -907,7 +854,7 @@ private fun SettingsScreen(
                 Text("Restablecer configuración")
             }
             Spacer(Modifier.height(18.dp))
-            Text("Calendario · versión 0.8.0", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Text("Calendario · versión 0.9.1", color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelSmall)
             Text("Tus eventos permanecen en los calendarios del dispositivo. La sincronización depende de Android.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall,

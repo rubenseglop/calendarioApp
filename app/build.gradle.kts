@@ -24,8 +24,8 @@ android {
         applicationId = "es.calendario.personal"
         minSdk = 29
         targetSdk = 35
-        versionCode = 10
-        versionName = "0.9.0"
+        versionCode = 11
+        versionName = "0.9.1"
     }
 
     buildFeatures { compose = true }
@@ -53,6 +53,5 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.glance:glance-material3:1.1.1")
-    implementation("com.google.android.gms:play-services-auth:22.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
