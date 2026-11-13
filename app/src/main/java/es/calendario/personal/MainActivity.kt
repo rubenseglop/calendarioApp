@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +39,11 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.api.Scope
+import com.google.android.gms.common.api.Status
+import com.google.android.gms.common.api.ResolvableApiException
 
 private val Spanish = Locale("es", "ES")
 private val DateFormat = DateTimeFormatter.ISO_LOCAL_DATE
@@ -56,7 +62,7 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class Destination(val label: String) {
-    CALENDAR("Calendario"), AGENDA("Agenda"), SETTINGS("Ajustes")
+    CALENDAR("Calendario"), AGENDA("Agenda"), TASKS("Tareas"), SETTINGS("Ajustes")
 }
 
 private val NightBackground = Color(0xFF101216)
@@ -137,6 +143,39 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
     var editingEvent by remember { mutableStateOf<CalendarEvent?>(null) }
     var showEditor by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
+    var tasksAccessToken by remember { mutableStateOf<String?>(null) }
+    val activity = context as ComponentActivity
+    val tasksAuthorizationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            try {
+                val authorization = Identity.getAuthorizationClient(activity)
+                    .getAuthorizationResultFromIntent(result.data)
+                tasksAccessToken = authorization.accessToken
+                if (tasksAccessToken.isNullOrBlank()) message = "Google no ha devuelto un permiso válido para Google Tasks."
+            } catch (e: Exception) {
+                message = e.message ?: "No se ha podido autorizar Google Tasks."
+            }
+        }
+    }
+    val connectGoogleTasks = {
+        val request = AuthorizationRequest.builder()
+            .setRequestedScopes(listOf(Scope("https://www.googleapis.com/auth/tasks")))
+            .build()
+        Identity.getAuthorizationClient(activity).authorize(request)
+            .addOnSuccessListener { authorization ->
+                if (authorization.hasResolution()) {
+                    authorization.pendingIntent?.let { pending ->
+                        tasksAuthorizationLauncher.launch(IntentSenderRequest.Builder(pending.intentSender).build())
+                    }
+                } else {
+                    tasksAccessToken = authorization.accessToken
+                    if (tasksAccessToken.isNullOrBlank()) message = "No se ha recibido autorización de Google Tasks."
+                }
+            }
+            .addOnFailureListener { error -> message = error.message ?: "No se ha podido conectar con Google." }
+    }
 
     val contactsPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -243,6 +282,7 @@ private fun CalendarApp(settings: AppSettings, onSettingsChange: (AppSettings) -
                     onSelect = { selectedDate = it; month = YearMonth.from(it) },
                     onEventClick = { editingEvent = it; showEditor = true }
                 )
+                selected == Destination.TASKS -> GoogleTasksScreen(tasksAccessToken, connectGoogleTasks)
                 selected == Destination.AGENDA -> AgendaScreen(
                     selectedDate, visibleEvents, repository, visibleBirthdays,
                     onDateChange = { selectedDate = it; month = YearMonth.from(it) },

@@ -39,7 +39,7 @@ La aplicación no envía los eventos a servidores propios.
 - Interfaz en español con estética oscura inspirada en Moleskine Timepage.
 - Compatible con Android 10 (API 29) y posteriores.
 
-## Próximas funcionalidades
+## Google Tasks\n\n- Acceso opcional a Google Tasks mediante Google Identity Services y el permiso OAuth `https://www.googleapis.com/auth/tasks`.\n- Consulta, creación, edición, finalización y eliminación de tareas de la lista predeterminada de Google Tasks.\n- Las tareas se mantienen en la cuenta de Google del usuario; la aplicación no almacena contraseñas ni tokens de acceso de forma persistente.\n- La primera conexión requiere habilitar Google Tasks API y configurar la pantalla de consentimiento y el cliente OAuth Android en Google Cloud Console.\n\n## Próximas funcionalidades
 
 - Notificaciones propias y búsqueda de eventos.
 - Vistas semanal y diaria más completas.
