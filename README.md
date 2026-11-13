@@ -97,4 +97,4 @@ La aplicación continúa en desarrollo. Las funciones existentes se mantienen co
 
 ## Licencia
 
-Todavía no se ha añadido un archivo de licencia al repositorio. Hasta que se publique una licencia explícita, el código no debe considerarse automáticamente de libre reutilización.
+Este proyecto se distribuye bajo la licencia **MIT**. Puedes usar, copiar, modificar, distribuir y sublicenciar el software, incluso con fines comerciales, siempre que conserves el aviso de copyright y el texto de la licencia. Consulta el archivo [LICENSE](LICENSE) para leer los términos completos.
